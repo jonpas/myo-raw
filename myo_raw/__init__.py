@@ -173,7 +173,9 @@ class MyoRaw(object):
                 self.on_imu(quat, acc, gyro)
             # Read classifier characteristic handle
             elif attr == 0x23:
-                typ, val, xdir, _, _, _ = struct.unpack('<6B', pay)
+                # note that older versions of the Myo send three bytes
+                # whereas newer ones send six bytes
+                typ, val, xdir = struct.unpack('<3B', pay[:3])
 
                 if typ == 1:  # on arm
                     self.on_arm(Arm(val), XDirection(xdir))

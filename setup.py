@@ -8,7 +8,7 @@ def readme():
 
 setup(
 	name='myo_raw',
-	version='1.0.0',
+	version='1.0.1',
 	description=__doc__,
 	long_description=readme(),
 	long_description_content_type='text/markdown',
