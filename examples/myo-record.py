@@ -1,9 +1,9 @@
+import argparse
+import collections
+import csv
 import time
 from datetime import datetime
-import argparse
 from pathlib import Path
-import csv
-import collections
 
 from myo_raw import MyoRaw
 
