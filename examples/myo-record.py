@@ -7,10 +7,10 @@ from pathlib import Path
 
 from myo_raw import MyoRaw
 
-emg_header = ['emg1', 'emg2', 'emg3', 'emg4', 'emg5', 'emg6', 'emg7',
-              'emg8', 'moving']
+emg_header = ['timestamp', 'emg1', 'emg2', 'emg3', 'emg4', 'emg5',
+              'emg6', 'emg7', 'emg8', 'moving']
 
-imu_header = ['ori_w', 'ori_x', 'ori_y', 'ori_z', 'accel_1',
+imu_header = ['timestamp', 'ori_w', 'ori_x', 'ori_y', 'ori_z', 'accel_1',
               'accel_2', 'accel_3', 'gyro_1', 'gyro_2', 'gyro_3']
 
 
@@ -30,8 +30,11 @@ def flatten(l):
 
 
 def write_data(writer, data):
-    row = list(flatten(data))
+    # Can Myo timestamp the data?
+    now = datetime.fromtimestamp(time.time()).isoformat()
+    row = list(flatten([now, data]))
     writer.writerow(row)
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -74,4 +77,4 @@ if __name__ == '__main__':
         m.disconnect()
         emg_file.close()
         imu_file.close()
-        print()
+        print("Disconnected")
