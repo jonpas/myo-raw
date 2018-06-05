@@ -21,12 +21,6 @@ imu_header = ['timestamp', 'ori_w', 'ori_x', 'ori_y', 'ori_z', 'accel_1',
               'accel_2', 'accel_3', 'gyro_1', 'gyro_2', 'gyro_3']
 
 
-class Myo(MyoRaw):
-
-    def __init__(self,  tty=None):
-        MyoRaw.__init__(self, tty)
-
-
 def flatten(l):
     for el in l:
         if isinstance(el, collections.Iterable) and not (
@@ -67,7 +61,7 @@ if __name__ == '__main__':
                             quoting=csv.QUOTE_MINIMAL)
     imu_writer.writerow(imu_header)
 
-    m = Myo(args.tty)
+    m = MyoRaw(args.tty)
     m.add_emg_handler(lambda *args: write_data(emg_writer, args))
     m.add_imu_handler(lambda *args: write_data(imu_writer, args))
     m.connect()
