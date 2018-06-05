@@ -1,3 +1,10 @@
+#
+# Original work Copyright (c) 2014 Danny Zhu
+# Modified work Copyright (c) 2018 Jamie Forth
+#
+# Licensed under the MIT license. See the LICENSE file for details.
+#
+
 import argparse
 import collections
 import csv
