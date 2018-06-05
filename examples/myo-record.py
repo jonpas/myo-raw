@@ -76,6 +76,8 @@ if __name__ == '__main__':
         pass
     finally:
         m.disconnect()
+        print("\nemg data saved to: {}".format(emg_file.name))
+        print("img data saved to: {}".format(imu_file.name))
         emg_file.close()
         imu_file.close()
         print("Disconnected")
