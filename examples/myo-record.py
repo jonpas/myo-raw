@@ -50,8 +50,8 @@ if __name__ == '__main__':
     now = datetime.fromtimestamp(time.time()).isoformat(timespec='seconds')
     outdir = Path(args.outdir)
     outdir.mkdir(parents=True, exist_ok=True)
-    emg_file = open(str(outdir / (now + '_emg.csv')), 'w', newline='')
-    imu_file = open(str(outdir / (now + '_imu.csv')), 'w', newline='')
+    emg_file = outdir.joinpath(now + '_emg.csv').open(mode='w', newline='')
+    imu_file = outdir.joinpath(now + '_imu.csv').open(mode='w', newline='')
 
     emg_writer = csv.writer(emg_file, csv.unix_dialect,
                             quoting=csv.QUOTE_MINIMAL)
