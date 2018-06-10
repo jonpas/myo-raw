@@ -314,7 +314,7 @@ class MyoRaw(object):
         return(self.emg_handlers.pop(i))
 
     def clear_emg_handlers(self):
-        self.emg_handlers = []
+        self.emg_handlers.clear()
 
     def add_imu_handler(self, h):
         self.imu_handlers.append(h)
@@ -323,7 +323,7 @@ class MyoRaw(object):
         return(self.imu_handlers.pop(i))
 
     def clear_imu_handlers(self):
-        self.imu_handlers = []
+        self.imu_handlers.clear()
 
     def add_pose_handler(self, h):
         self.pose_handlers.append(h)
@@ -332,7 +332,7 @@ class MyoRaw(object):
         return(self.pose_handlers.pop(i))
 
     def clear_pose_handlers(self):
-        self.pose_handlers = []
+        self.pose_handlers.clear()
 
     def add_arm_handler(self, h):
         self.arm_handlers.append(h)
@@ -341,7 +341,7 @@ class MyoRaw(object):
         return(self.arm_handlers.pop(i))
 
     def clear_arm_handlers(self):
-        self.arm_handlers = []
+        self.arm_handlers.clear()
 
     def add_battery_handler(self, h):
         self.battery_handlers.append(h)
@@ -350,7 +350,7 @@ class MyoRaw(object):
         return(self.battery_handlers.pop(i))
 
     def clear_battery_handlers(self):
-        self.battery_handlers = []
+        self.battery_handlers.clear()
 
     def on_emg(self, emg, moving):
         for h in self.emg_handlers:
