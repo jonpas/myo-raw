@@ -1,6 +1,7 @@
 #
 # Original work Copyright (c) 2014 Danny Zhu
 # Modified work Copyright (c) 2017 Alvaro Villoslada, Fernando Cosentino
+# Modified work Copyright (c) 2018 Google LLC
 # 
 # Licensed under the MIT license. See the LICENSE file for details.
 #
@@ -309,17 +310,47 @@ class MyoRaw(object):
     def add_emg_handler(self, h):
         self.emg_handlers.append(h)
 
+    def pop_emg_handler(self, i=-1):
+        return(self.emg_handlers.pop(i))
+
+    def clear_emg_handlers(self):
+        self.emg_handlers.clear()
+
     def add_imu_handler(self, h):
         self.imu_handlers.append(h)
+
+    def pop_imu_handler(self, i=-1):
+        return(self.imu_handlers.pop(i))
+
+    def clear_imu_handlers(self):
+        self.imu_handlers.clear()
 
     def add_pose_handler(self, h):
         self.pose_handlers.append(h)
 
+    def pop_pose_handler(self, i=-1):
+        return(self.pose_handlers.pop(i))
+
+    def clear_pose_handlers(self):
+        self.pose_handlers.clear()
+
     def add_arm_handler(self, h):
         self.arm_handlers.append(h)
 
+    def pop_arm_handler(self, i=-1):
+        return(self.arm_handlers.pop(i))
+
+    def clear_arm_handlers(self):
+        self.arm_handlers.clear()
+
     def add_battery_handler(self, h):
         self.battery_handlers.append(h)
+
+    def pop_battery_handler(self, i=-1):
+        return(self.battery_handlers.pop(i))
+
+    def clear_battery_handlers(self):
+        self.battery_handlers.clear()
 
     def on_emg(self, emg, moving):
         for h in self.emg_handlers:
