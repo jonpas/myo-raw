@@ -40,6 +40,8 @@ def write_data(writer, data):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--tty", default=None,
+                        help="The Myo dongle device")
+    parser.add_argument("--mac", default=None,
                         help="The Myo device")
     parser.add_argument('-o', '--outdir', metavar='path',
                         default='./',
@@ -64,7 +66,7 @@ if __name__ == '__main__':
     m = MyoRaw(args.tty)
     m.add_emg_handler(lambda *args: write_data(emg_writer, args))
     m.add_imu_handler(lambda *args: write_data(imu_writer, args))
-    m.connect()
+    m.connect(args.mac)
 
     # Enable never sleep mode.
     m.sleep_mode(1)

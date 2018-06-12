@@ -2,6 +2,7 @@
 # Original work Copyright (c) 2014 Danny Zhu
 # Modified work Copyright (c) 2017 Alvaro Villoslada, Fernando Cosentino
 # Modified work Copyright (c) 2018 Google LLC
+# Modified work Copyright (c) 2018 Matthias Gazzari
 # 
 # Licensed under the MIT license. See the LICENSE file for details.
 #
@@ -63,7 +64,7 @@ class MyoRaw(object):
     def run(self, timeout=None):
         self.bt.recv_packet(timeout)
 
-    def connect(self, filtered=False):
+    def connect(self, mac=None, filtered=False):
         # stop everything from before
         self.bt.end_scan()
         self.bt.disconnect(0)
@@ -79,7 +80,10 @@ class MyoRaw(object):
 
             if p.payload.endswith(b'\x06\x42\x48\x12\x4A\x7F\x2C\x48\x47\xB9\xDE\x04\xA9\x01\x00\x06\xD5'):
                 addr = list(list(p.payload[2:8]))
-                break
+                addr_str = ':'.join(format(item, '02x') for item in reversed(addr))
+                print('MAC address:', addr_str)
+                if mac is None or mac.lower() == addr_str:
+                    break
         self.bt.end_scan()
 
         # connect and wait for status event
