@@ -1,6 +1,7 @@
 #
 # Original work Copyright (c) 2014 Danny Zhu
-# Modified work Copyright (c) 2017 Alvaro Villoslada, Fernando Cosentino
+# Modified work Copyright (c) 2017 Alvaro Villoslada
+# Modified work Copyright (c) 2017 Fernando Cosentino
 # Modified work Copyright (c) 2018 Google LLC
 # Modified work Copyright (c) 2018 Matthias Gazzari
 # 
