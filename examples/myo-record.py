@@ -39,13 +39,12 @@ def write_data(writer, data):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("--tty", default=None,
-                        help="The Myo dongle device")
-    parser.add_argument("--mac", default=None,
-                        help="The Myo device")
-    parser.add_argument('-o', '--outdir', metavar='path',
-                        default='./',
-                        help="Directory to write result files.")
+    parser.add_argument('--tty', default=None, help='The Myo dongle device')
+    parser.add_argument('--mac', default=None, help='The Myo device')
+    parser.add_argument('--raw', default=False, action='store_true',
+                        help='Switch between filtered or raw EMG data')
+    parser.add_argument('-o', '--outdir', metavar='path', default='./',
+                        help='Directory to write result files.')
     args = parser.parse_args()
 
     # Make output files.
@@ -66,10 +65,13 @@ if __name__ == '__main__':
     m = MyoRaw(args.tty)
     m.add_emg_handler(lambda *args: write_data(emg_writer, args))
     m.add_imu_handler(lambda *args: write_data(imu_writer, args))
-    m.connect(args.mac)
+    m.connect(args.mac, not args.raw)
 
     # Enable never sleep mode.
     m.sleep_mode(1)
+
+    # vibrate to signalise which Myo will start to stream data
+    m.vibrate(1)
 
     try:
         while True:
@@ -78,8 +80,8 @@ if __name__ == '__main__':
         pass
     finally:
         m.disconnect()
-        print("\nemg data saved to: {}".format(emg_file.name))
-        print("img data saved to: {}".format(imu_file.name))
+        print('\nemg data saved to: {}'.format(emg_file.name))
+        print('img data saved to: {}'.format(imu_file.name))
         emg_file.close()
         imu_file.close()
-        print("Disconnected")
+        print('Disconnected')
