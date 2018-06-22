@@ -1,6 +1,7 @@
 #
 # Original work Copyright (c) 2014 Danny Zhu
-# Modified work Copyright (c) 2017 Alvaro Villoslada, Fernando Cosentino
+# Modified work Copyright (c) 2017 Alvaro Villoslada
+# Modified work Copyright (c) 2017 Fernando Cosentino
 # 
 # Licensed under the MIT license. See the LICENSE file for details.
 #

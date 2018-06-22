@@ -18,7 +18,7 @@ setup(
     setup_requires=['setuptools_scm'],
     description=__doc__,
     long_description=readme(),
-    author='Danny Zhu, Alvaro Villoslada, Fernando Cosentino',
+    author='Danny Zhu and contributors',
     maintainer='Matthias Gazzari',
     maintainer_email='matthias.gazzari@stud.tu-darmstadt.de',
     url='https://github.com/qtux/myo-raw',
