@@ -1,4 +1,12 @@
-# Overview
+..
+  Original work Copyright 2014 Danny Zhu
+  Modified work Copyright 2017 Annemarie Mattmann
+  Modified work Copyright 2017-2018 Matthias Gazzari
+
+  Licensed under the MIT license. See the LICENSE file for details.
+
+Overview
+========
 
 This library provides an interface to communicate with the Thalmic Myo,
 providing the ability to scan for and connect to a nearby Myo, and giving access
@@ -8,25 +16,28 @@ access to the output of Thalmic's own gesture recognition is also available.
 The code is primarily developed on Linux.
 
 
-# Installation
+Installation
+============
 
-To install the library simply clone the repository and pip install it:
+To install the library simply clone the repository and pip install it::
 
-	git clone https://github.com/qtux/myo-raw.git
-	cd myo-raw
-	pip install .
+  git clone https://github.com/qtux/myo-raw.git
+  cd myo-raw
+  pip install .
 
-To run the examples you will also need to install
+To run the examples you will also need to install::
 
-	pip install ".[emg, classification]"
+  pip install ".[emg, classification]"
 
 
-# Usage
+Usage
+=====
 
 The `myo_raw` folder contains the library files to access EMG/IMU data. The
 Myo communication protocol is implemented in the MyoRaw class.
 
-## Dongle device name
+Dongle device name
+------------------
 
 To use the library, you might need to know the name of the device
 corresponding to the Myo dongle. The programs will attempt to detect it
@@ -44,7 +55,8 @@ automatically, but if that doesn't work, here's how to find it out manually:
 
 - Mac: Same as Linux, replacing `ttyACM` with `tty.usb`.
 
-## Process data using handlers
+Process data using handlers
+---------------------------
 
 To process the data, you can call **MyoRaw.add_emg_handler** or
 **MyoRaw.add_imu_handler**; see `examples/emg.py` for example reference.
@@ -55,20 +67,23 @@ classification onboard, and returns that information. Use
 will need to perform the sync gesture after starting the program (the Myo will
 vibrate as normal when it is synced).
 
-### Perform the sync gesture as described by [Myo Support](https://support.getmyo.com/hc/en-us/articles/200755509-How-to-perform-the-sync-gesture):
+Perform the sync gesture as described by `Myo Support`_
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-> Make sure you're wearing Myo with the USB port facing your wrist. Gently flex
-> your wrist away from your body. Myo will begin to vibrate when it recognizes
-> this gesture. Hold this gesture for a few seconds until Myo stops vibrating.
+  "Make sure you're wearing Myo with the USB port facing your wrist. Gently flex
+  your wrist away from your body. Myo will begin to vibrate when it recognizes
+  this gesture. Hold this gesture for a few seconds until Myo stops vibrating.
 
-> You will know you performed the sync gesture successfully when the Thalmic
-> Labs logo LED on the armband stops pulsing. If it needs to warm up, you will
-> see it blink along with an notification next to the gesture indicator window
-> in Myo Connect. Once Myo is fully warmed up and synced, you will feel three
-> distinct vibrations.
+  You will know you performed the sync gesture successfully when the Thalmic
+  Labs logo LED on the armband stops pulsing. If it needs to warm up, you will
+  see it blink along with an notification next to the gesture indicator window
+  in Myo Connect. Once Myo is fully warmed up and synced, you will feel three
+  distinct vibrations."
 
+.. _`Myo Support`: https://support.getmyo.com/hc/en-us/articles/200755509-How-to-perform-the-sync-gesture/
 
-# Examples
+Examples
+========
 
 Before running the examples make sure you have the `extras` requirements
 installed as described above.
@@ -76,7 +91,8 @@ installed as described above.
 To run an example change directory to the `examples` folder and execute
 it with python, e.g. `python emg.py`.
 
-## emg.py (try out communication and display EMG readings)
+emg.py (try out communication and display EMG readings)
+-------------------------------------------------------
 
 This example provides a graphical
 display of EMG readings as they come in. A command-line argument is interpreted
@@ -84,7 +100,8 @@ as the device name for the dongle; no argument means to auto-detect. You can
 also press 1, 2, or 3 on the keyboard to make the Myo perform a short, medium,
 or long vibration.
 
-## classification.py (example pose classification, training program and pose event handlers)
+classification.py (example pose classification, training program and pose event handlers)
+-----------------------------------------------------------------------------------------
 
 This example contains a very basic pose classifier that uses the EMG
 readings. You have to train it yourself: Make up your own poses and assign
@@ -104,7 +121,8 @@ detected. Use **Myo.add_raw_pose_handler** (rather than add_pose_handler) to be
 notified of poses from this class's classifier, rather than Thalmic's onboard
 processing.
 
-### Tips for classification:
+Tips for classification
+^^^^^^^^^^^^^^^^^^^^^^^
 
 - make sure to only press the number keys while the pose is being held, not
   while your hand is moving to or from the pose
@@ -117,7 +135,8 @@ take quite a large amount of training data to handle different positions well
 enough.
 
 
-# Issues
+Issues
+======
 
 - on Windows, the readings become more and more delayed as time goes on
 - doesn't have access to Thalmic's pose recognition (for firmware < v1.0)
@@ -127,13 +146,16 @@ enough.
   related to Pygame version)
 
 
-# Acknowledgements
+Acknowledgements
+================
 
-Thanks to Jeff Rowberg's example bglib implementations
-(https://github.com/jrowberg/bglib/), which helped to get started with
-understanding the protocol.
+Thanks to Jeff Rowberg's example `bglib`_ implementations, which helped to get
+started with understanding the protocol.
+
+.. _`bglib`: https://github.com/jrowberg/bglib/
 
 
-# License
+License
+=======
 
 This project is licensed under the MIT License.

@@ -1,9 +1,15 @@
+#
+# Copyright (c) 2017 - 2018 Matthias Gazzari
+#
+# Licensed under the MIT license. See the LICENSE file for details.
+#
+
 '''A Python library to communicate with the Thalmic Myo'''
 
 from setuptools import setup
 
 def readme():
-    with open('README.md') as f:
+    with open('README.rst') as f:
         return f.read()
 
 setup(
@@ -11,7 +17,6 @@ setup(
     version='1.0.1',
     description=__doc__,
     long_description=readme(),
-    long_description_content_type='text/markdown',
     author='Danny Zhu, Alvaro Villoslada, Fernando Cosentino',
     maintainer='Matthias Gazzari',
     maintainer_email='matthias.gazzari@stud.tu-darmstadt.de',
