@@ -5,8 +5,8 @@
 
   Licensed under the MIT license. See the LICENSE file for details.
 
-Overview
-========
+myo-raw
+=======
 
 This library provides an interface to communicate with the Thalmic Myo,
 providing the ability to scan for and connect to a nearby Myo, and giving access

@@ -6,12 +6,12 @@
 Welcome to myo-raw's documentation!
 ===================================
 
-.. include:: ../README.rst
 
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
 
+   overview
 
 
 Indices and tables
