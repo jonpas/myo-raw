@@ -14,7 +14,8 @@ def readme():
 
 setup(
     name='myo_raw',
-    version='1.0.1',
+    use_scm_version=True,
+    setup_requires=['setuptools_scm'],
     description=__doc__,
     long_description=readme(),
     author='Danny Zhu, Alvaro Villoslada, Fernando Cosentino',
