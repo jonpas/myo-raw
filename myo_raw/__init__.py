@@ -9,9 +9,7 @@
 #
 
 import enum
-import re
 import struct
-from serial.tools.list_ports import comports
 from .bluetooth import BT
 
 class Arm(enum.Enum):
@@ -40,11 +38,6 @@ class MyoRaw(object):
     '''Implements the Myo-specific communication protocol.'''
 
     def __init__(self, tty=None):
-        if tty is None:
-            tty = self.detect_tty()
-        if tty is None:
-            raise ValueError('Myo dongle not found!')
-
         self.bt = BT(tty)
         self.conn = None
         self.emg_handlers = []
@@ -52,14 +45,6 @@ class MyoRaw(object):
         self.arm_handlers = []
         self.pose_handlers = []
         self.battery_handlers = []
-
-    def detect_tty(self):
-        for p in comports():
-            if re.search(r'PID=2458:0*1', p[2]):
-                print('using device:', p[0])
-                return p[0]
-
-        return None
 
     def run(self, timeout=None):
         self.bt.recv_packet(timeout)

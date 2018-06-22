@@ -9,7 +9,9 @@
 import struct
 import threading
 import time
+import re
 import serial
+from serial.tools import list_ports
 
 class Packet(object):
     def __init__(self, ords):
@@ -27,10 +29,23 @@ class Packet(object):
 class BT(object):
     '''Implements the non-Myo-specific details of the Bluetooth protocol.'''
     def __init__(self, tty):
+        if tty is None:
+            tty = self.detect_tty()
+        if tty is None:
+            raise ValueError('Myo dongle not found!')
         self.ser = serial.Serial(port=tty, baudrate=9600, dsrdtr=1)
         self.buf = []
         self.lock = threading.Lock()
         self.handlers = []
+
+    @staticmethod
+    def detect_tty():
+        '''Try to find a Bluegiga BLED112 dongle'''
+        for port, desc, hwid in list_ports.comports():
+            if re.search(r'PID=2458:0*1', hwid):
+                print('using "{0}" at port {1}'.format(desc, port))
+                return port
+        return None
 
     # internal data-handling methods
     def recv_packet(self, timeout=None):
