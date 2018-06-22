@@ -2,7 +2,7 @@
 # Original work Copyright (c) 2014 Danny Zhu
 # Modified work Copyright (c) 2017 Alvaro Villoslada
 # Modified work Copyright (c) 2017 Fernando Cosentino
-# 
+#
 # Licensed under the MIT license. See the LICENSE file for details.
 #
 
@@ -126,7 +126,7 @@ class BT(object):
         self.send_command(4, 5, struct.pack('<BHB', con, attr, len(val)) + val)
         return self.wait_event(4, 1)
 
-    def send_command(self, cls, cmd, payload=b'', wait_resp=True):
+    def send_command(self, cls, cmd, payload=b''):
         s = struct.pack('<4B', 0, len(payload), cls, cmd) + payload
         self.ser.write(s)
 

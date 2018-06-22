@@ -4,14 +4,13 @@
 # Modified work Copyright (c) 2017 Fernando Cosentino
 # Modified work Copyright (c) 2018 Google LLC
 # Modified work Copyright (c) 2018 Matthias Gazzari
-# 
+#
 # Licensed under the MIT license. See the LICENSE file for details.
 #
 
 import enum
 import re
 import struct
-import sys
 from serial.tools.list_ports import comports
 from .bluetooth import BT
 
@@ -188,7 +187,7 @@ class MyoRaw(object):
             if (p.cls, p.cmd) != (4, 5):
                 return
 
-            c, attr, typ = struct.unpack('<BHB', p.payload[:4])
+            _, attr, typ = struct.unpack('<BHB', p.payload[:4])
             pay = p.payload[5:]
 
             if attr == 0x27:
