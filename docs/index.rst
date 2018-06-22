@@ -12,6 +12,7 @@ Welcome to myo-raw's documentation!
    :caption: Contents:
 
    overview
+   notes
 
 
 Indices and tables
