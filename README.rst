@@ -33,7 +33,7 @@ To run the examples you will also need to install::
 Usage
 =====
 
-The `myo_raw` folder contains the library files to access EMG/IMU data. The
+The `myo-raw` folder contains the library files to access EMG/IMU data. The
 Myo communication protocol is implemented in the MyoRaw class.
 
 Dongle device name
