@@ -93,9 +93,9 @@ class MyoRaw(object):
             self.write_attr(0x32, b'\x01\x00')
             self.write_attr(0x35, b'\x01\x00')
 
-            # enable EMG data
+            # suscribe to EMG notifications to enable EMG data
             self.write_attr(0x28, b'\x01\x00')
-            # enable IMU data
+            # suscribe to IMU notifications to enable IMU data
             self.write_attr(0x1d, b'\x01\x00')
 
             # Sampling rate of the underlying EMG sensor, capped to 1000. If it's
@@ -117,9 +117,9 @@ class MyoRaw(object):
             name = self.read_attr(0x03)
             print('device name: %s' % name.payload)
 
-            # enable IMU data
+            # suscribe to IMU notifications to enable IMU data
             self.write_attr(0x1d, b'\x01\x00')
-            # enable on/off arm notifications
+            # suscribe to classifier indications to enable on/off arm notifications
             self.write_attr(0x24, b'\x02\x00')
             # enable EMG notifications
             ''' To get raw EMG signals, we subscribe to the four EMG notification
@@ -162,7 +162,9 @@ class MyoRaw(object):
             a measure of muscle strength, but are not as useful as a truly raw signal).
             '''
             if filtered:
-                self.write_attr(0x28, b'\x01\x00')  # Not needed for raw signals
+                # suscribe to EMG notifications (not needed for raw signals)
+                self.write_attr(0x28, b'\x01\x00')
+                # set EMG and IMU, payload size = 3, EMG on, IMU on, classifier on
                 self.write_attr(0x19, b'\x01\x03\x01\x01\x01')
             # enable battery notifications
             self.write_attr(0x12, b'\x01\x10')
