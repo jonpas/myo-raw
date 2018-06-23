@@ -2,6 +2,7 @@
 # Original work Copyright (c) 2014 Danny Zhu
 # Modified work Copyright (c) 2017 Alvaro Villoslada
 # Modified work Copyright (c) 2017 Fernando Cosentino
+# Modified work Copyright (c) 2018 Matthias Gazzari
 #
 # Licensed under the MIT license. See the LICENSE file for details.
 #
@@ -33,6 +34,7 @@ class BT(object):
             tty = self.detect_tty()
         if tty is None:
             raise ValueError('Myo dongle not found!')
+        self.conn = None
         self.ser = serial.Serial(port=tty, baudrate=9600, dsrdtr=1)
         self.buf = []
         self.lock = threading.Lock()
@@ -119,7 +121,9 @@ class BT(object):
 
     # specific BLE commands
     def connect(self, addr):
-        return self.send_command(6, 3, struct.pack('<6sBHHHH', bytes(addr), 0, 6, 6, 64, 0))
+        conn_pkt = self.send_command(6, 3, struct.pack('<6sBHHHH', bytes(addr), 0, 6, 6, 64, 0))
+        self.conn = list(conn_pkt.payload)[-1]
+        self.wait_event(3, 0)
 
     def get_connections(self):
         return self.send_command(0, 6)
@@ -130,16 +134,22 @@ class BT(object):
     def end_scan(self):
         return self.send_command(6, 4)
 
-    def disconnect(self, h):
-        return self.send_command(3, 0, struct.pack('<B', h))
+    def disconnect(self, connection_number=None):
+        if connection_number is not None:
+            return self.send_command(3, 0, struct.pack('<B', connection_number))
+        return None
 
-    def read_attr(self, con, attr):
-        self.send_command(4, 4, struct.pack('<BH', con, attr))
-        return self.wait_event(4, 5)
+    def read_attr(self, attr):
+        if self.conn is not None:
+            self.send_command(4, 4, struct.pack('<BH', self.conn, attr))
+            return self.wait_event(4, 5)
+        return None
 
-    def write_attr(self, con, attr, val):
-        self.send_command(4, 5, struct.pack('<BHB', con, attr, len(val)) + val)
-        return self.wait_event(4, 1)
+    def write_attr(self, attr, val):
+        if self.conn is not None:
+            self.send_command(4, 5, struct.pack('<BHB', self.conn, attr, len(val)) + val)
+            return self.wait_event(4, 1)
+        return None
 
     def send_command(self, cls, cmd, payload=b''):
         s = struct.pack('<4B', 0, len(payload), cls, cmd) + payload

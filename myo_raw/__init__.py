@@ -39,7 +39,6 @@ class MyoRaw(object):
 
     def __init__(self, tty=None):
         self.bt = BT(tty)
-        self.conn = None
         self.emg_handlers = []
         self.imu_handlers = []
         self.arm_handlers = []
@@ -72,9 +71,7 @@ class MyoRaw(object):
         self.bt.end_scan()
 
         # connect and wait for status event
-        conn_pkt = self.bt.connect(addr)
-        self.conn = list(conn_pkt.payload)[-1]
-        self.bt.wait_event(3, 0)
+        self.bt.connect(addr)
 
         # get firmware version
         fw = self.read_attr(0x17)
@@ -226,17 +223,13 @@ class MyoRaw(object):
         self.bt.add_handler(handle_data)
 
     def write_attr(self, attr, val):
-        if self.conn is not None:
-            self.bt.write_attr(self.conn, attr, val)
+        self.bt.write_attr(attr, val)
 
     def read_attr(self, attr):
-        if self.conn is not None:
-            return self.bt.read_attr(self.conn, attr)
-        return None
+        return self.bt.read_attr(attr)
 
     def disconnect(self):
-        if self.conn is not None:
-            self.bt.disconnect(self.conn)
+        self.bt.disconnect(self.bt.conn)
 
     def sleep_mode(self, mode):
         self.write_attr(0x19, struct.pack('<3B', 9, 1, mode))
