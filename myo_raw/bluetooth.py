@@ -142,13 +142,17 @@ class BT(object):
     def read_attr(self, attr):
         if self.conn is not None:
             self.send_command(4, 4, struct.pack('<BH', self.conn, attr))
-            return self.wait_event(4, 5)
+            ble_payload = self.wait_event(4, 5).payload
+            # strip off the 4 byte L2CAP header and the payload length byte of the ble payload field
+            return ble_payload[5:]
         return None
 
     def write_attr(self, attr, val):
         if self.conn is not None:
             self.send_command(4, 5, struct.pack('<BHB', self.conn, attr, len(val)) + val)
-            return self.wait_event(4, 1)
+            ble_payload = self.wait_event(4, 1).payload
+            # strip off the 4 byte L2CAP header and the payload length byte of the ble payload field
+            return ble_payload[5:]
         return None
 
     def send_command(self, cls, cmd, payload=b''):

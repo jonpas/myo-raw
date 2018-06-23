@@ -74,13 +74,11 @@ class MyoRaw(object):
         self.bt.connect(addr)
 
         # get firmware version
-        fw = self.read_attr(0x17)
-        _, _, _, _, v0, v1, v2, v3 = struct.unpack('<BHBBHHHH', fw.payload)
-        print('firmware version: %d.%d.%d.%d' % (v0, v1, v2, v3))
+        firmware = self.read_attr(0x17)
+        version = struct.unpack('<HHHH', firmware)
+        print('firmware version: %d.%d.%d.%d' % version)
 
-        self.old = (v0 == 0)
-
-        if self.old:
+        if version < (1, 0, 0, 0):
             # don't know what these do; Myo Connect sends them, though we get data
             # fine without them
             self.write_attr(0x19, b'\x01\x02\x00\x00')
@@ -112,7 +110,7 @@ class MyoRaw(object):
 
         else:
             name = self.read_attr(0x03)
-            print('device name: %s' % name.payload)
+            print('device name: %s' % name)
 
             # suscribe to IMU notifications to enable IMU data
             self.write_attr(0x1d, b'\x01\x00')
@@ -247,7 +245,7 @@ class MyoRaw(object):
 
     # def get_battery_level(self):
     #     battery_level = self.read_attr(0x11)
-    #     return ord(battery_level.payload[5])
+    #     return ord(battery_level[0])
 
     def add_emg_handler(self, h):
         self.emg_handlers.append(h)
