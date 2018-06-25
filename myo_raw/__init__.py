@@ -49,29 +49,10 @@ class MyoRaw(object):
         self.bt.recv_packet(timeout)
 
     def connect(self, mac=None, filtered=False):
-        # stop everything from before
-        self.bt.end_scan()
-        self.bt.disconnect(0)
-        self.bt.disconnect(1)
-        self.bt.disconnect(2)
-
-        # start scanning
-        print('scanning...')
-        self.bt.discover()
-        while True:
-            p = self.bt.recv_packet()
-            print('scan response:', p)
-
-            if p.payload.endswith(b'\x06\x42\x48\x12\x4A\x7F\x2C\x48\x47\xB9\xDE\x04\xA9\x01\x00\x06\xD5'):
-                addr = list(list(p.payload[2:8]))
-                addr_str = ':'.join(format(item, '02x') for item in reversed(addr))
-                print('MAC address:', addr_str)
-                if mac is None or mac.lower() == addr_str:
-                    break
-        self.bt.end_scan()
-
-        # connect and wait for status event
-        self.bt.connect(addr)
+        # scan for a Myo armband
+        mac = self.bt.scan('4248124a7f2c4847b9de04a9010006d5', mac)
+        # connect to a Myo armband
+        self.bt.connect(mac)
 
         # get firmware version
         firmware = self.read_attr(0x17)
@@ -227,7 +208,7 @@ class MyoRaw(object):
         return self.bt.read_attr(attr)
 
     def disconnect(self):
-        self.bt.disconnect(self.bt.conn)
+        self.bt.disconnect()
 
     def sleep_mode(self, mode):
         self.write_attr(0x19, struct.pack('<3B', 9, 1, mode))

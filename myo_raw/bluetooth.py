@@ -120,23 +120,40 @@ class BT(object):
         return res[0]
 
     # specific BLE commands
-    def connect(self, addr):
-        conn_pkt = self.send_command(6, 3, struct.pack('<6sBHHHH', bytes(addr), 0, 6, 6, 64, 0))
+    def scan(self, target_uuid, target_address):
+        # stop scanning and terminate previous connection 0, 1 and 2
+        self.send_command(6, 4)
+        for connection_number in range(3):
+            self.send_command(3, 0, struct.pack('<B', connection_number))
+
+        # start scanning
+        print('scanning...')
+        self.send_command(6, 2, b'\x01')
+        while True:
+            packet = self.recv_packet()
+            if packet.payload.endswith(bytes.fromhex(target_uuid)):
+                address = list(list(packet.payload[2:8]))
+                address_string = ':'.join(format(item, '02x') for item in reversed(address))
+                print('found a Myo armband (MAC address: {0})'.format(address_string))
+                if target_address is None or target_address.lower() == address_string:
+                    # stop scanning and return the found mac address
+                    self.send_command(6, 4)
+                    print('selected {0}'.format(address_string))
+                    return address_string
+
+    def connect(self, target_address):
+        # connect to the Myo armband
+        address = [int(item, 16) for item in reversed(target_address.split(':'))]
+        conn_pkt = self.send_command(6, 3, struct.pack('<6sBHHHH', bytes(address), 0, 6, 6, 64, 0))
         self.conn = list(conn_pkt.payload)[-1]
         self.wait_event(3, 0)
 
     def get_connections(self):
         return self.send_command(0, 6)
 
-    def discover(self):
-        return self.send_command(6, 2, b'\x01')
-
-    def end_scan(self):
-        return self.send_command(6, 4)
-
-    def disconnect(self, connection_number=None):
-        if connection_number is not None:
-            return self.send_command(3, 0, struct.pack('<B', connection_number))
+    def disconnect(self):
+        if self.conn is not None:
+            return self.send_command(3, 0, struct.pack('<B', self.conn))
         return None
 
     def read_attr(self, attr):
