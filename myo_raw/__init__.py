@@ -146,13 +146,7 @@ class MyoRaw(object):
             self.write_attr(0x12, b'\x01\x10')
 
         # add data handlers
-        def handle_data(p):
-            if (p.cls, p.cmd) != (4, 5):
-                return
-
-            _, attr, typ = struct.unpack('<BHB', p.payload[:4])
-            pay = p.payload[5:]
-
+        def handle_data(attr, pay):
             if attr == 0x27:
                 # Unpack a 17 byte array, first 16 are 8 unsigned shorts, last one an unsigned char
                 vals = struct.unpack('<8HB', pay)
@@ -197,9 +191,16 @@ class MyoRaw(object):
                 battery_level = ord(pay)
                 self.on_battery(battery_level)
             else:
-                print('data with unknown attr: %02X %s' % (attr, p))
+                print('data with unknown attr: %02X %s' % (attr, pay))
 
-        self.bt.add_handler(handle_data)
+        def wrapped_handle_data(packet):
+            if (packet.cls, packet.cmd) != (4, 5):
+                return
+            _, attr, _ = struct.unpack('<BHB', packet.payload[:4])
+            pay = packet.payload[5:]
+            handle_data(attr, pay)
+
+        self.bt.add_handler(wrapped_handle_data)
 
     def write_attr(self, attr, val):
         self.bt.write_attr(attr, val)
