@@ -13,6 +13,8 @@ providing the ability to scan for and connect to a nearby Myo, and giving access
 to data from the EMG sensors and the IMU. For Myo firmware v1.0 or higher,
 access to the output of Thalmic's own gesture recognition is also available.
 
+Both the provided Bluegiga BLED112 dongle (cross-plattfrom) or a standard
+Bluetooth adapter (Linux) may be used to connect to a Myo armband.
 The code is primarily developed on Linux.
 
 
@@ -25,6 +27,10 @@ To install the library simply clone the repository and pip install it::
   cd myo-raw
   pip install .
 
+To use a native Bluetooth adapter (Linux) you also need to install::
+
+  pip install ".[native]"
+
 To run the examples you will also need to install::
 
   pip install ".[emg, classification]"
@@ -36,8 +42,9 @@ Usage
 The `myo-raw` folder contains the library files to access EMG/IMU data. The
 Myo communication protocol is implemented in the MyoRaw class.
 
-Dongle device name
-------------------
+
+Using the provided Bluegiga BLED112 dongle
+------------------------------------------
 
 To use the library, you might need to know the name of the device
 corresponding to the Myo dongle. The programs will attempt to detect it
@@ -54,6 +61,65 @@ automatically, but if that doesn't work, here's how to find it out manually:
   parentheses at the end of the line (it will be "COM" followed by a number).
 
 - Mac: Same as Linux, replacing `ttyACM` with `tty.usb`.
+
+Using the native Bluetooth adapter (Linux)
+------------------------------------------
+
+To use the libary with a native Bluetooth adapter, you need to consider
+the three things below. Note that the examples are created using bluez 5.50.
+There are differences when using older bluez versions.
+
+1. Power-on
+^^^^^^^^^^^
+Power on your Bluetooth adapter manually::
+
+  bluetoothctl power on
+
+Or add the following to the **/etc/bluetooth/main.conf** file::
+
+  [Policy]
+  AutoEnable=true
+
+to ensure automatic power-on after rebooting your computer.
+
+2. Add capabilities
+^^^^^^^^^^^^^^^^^^^
+
+You need to grant raw capturing capabilities for the ``bluepy-helper``, for
+example by executing::
+
+  setcap 'cap_net_raw,cap_net_admin+eip' /usr/lib/python3.6/site-packages/bluepy/bluepy-helper
+
+for a globally installed bluepy.
+
+3. Set the maximum connection interval
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Set the maximum connection interval to suit your bandwidth requirements. High
+values require less power but limit the bandwidth. As bluepy has no option for
+this, you have to edit the **/var/lib/bluetooth/$ADAPTER_ADDRESS/$MYO_ADDRESS/info**
+file, which is created upon connecting to the Myo armband with bluez::
+
+  bluetoothctl connect $MYO_ADDRESS
+
+Add the following lines (set the ``MinInterval`` and ``MaxInterval`` values
+to those that meet your requirements)::
+
+  [ConnectionParameters]
+  MinInterval=6
+  MaxInterval=20
+  Latency=0
+  Timeout=200
+
+and restart the Bluetooth service::
+
+    systemctl restart bluetooth.service
+
+to apply the parameters. You can use::
+
+  btmon | grep interval
+
+to debug the values used during connecting.
 
 Process data using handlers
 ---------------------------
