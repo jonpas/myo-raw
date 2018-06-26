@@ -101,7 +101,7 @@ class MyoRaw(object):
 
         else:
             name = self.read_attr(0x03)
-            print('device name: %s' % name)
+            print('device name: %s' % name.decode('utf-8'))
 
             # suscribe to IMU notifications to enable IMU data
             self.write_attr(0x1d, b'\x01\x00')
