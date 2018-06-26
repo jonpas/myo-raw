@@ -8,10 +8,11 @@
 myo-raw
 =======
 
-This library provides an interface to communicate with the Thalmic Myo,
-providing the ability to scan for and connect to a nearby Myo, and giving access
-to data from the EMG sensors and the IMU. For Myo firmware v1.0 or higher,
-access to the output of Thalmic's own gesture recognition is also available.
+This library provides an interface to communicate with the Thalmic Lab's Myo,
+providing the ability to scan for and connect to a nearby Myo armband, and
+giving access to data from the EMG sensors and the IMU.
+For Myo firmware v1.0 or higher, access to the output of Thalmic's own gesture
+recognition is also available.
 
 Both the provided Bluegiga BLED112 dongle (cross-plattfrom) or a standard
 Bluetooth adapter (Linux) may be used to connect to a Myo armband.
@@ -39,8 +40,8 @@ To run the examples you will also need to install::
 Usage
 =====
 
-The `myo-raw` folder contains the library files to access EMG/IMU data. The
-Myo communication protocol is implemented in the MyoRaw class.
+The *myo-raw* folder contains the library files to access EMG/IMU data. The
+Myo communication protocol is implemented in the ``MyoRaw`` class.
 
 
 Using the provided Bluegiga BLED112 dongle
@@ -50,17 +51,17 @@ To use the library, you might need to know the name of the device
 corresponding to the Myo dongle. The programs will attempt to detect it
 automatically, but if that doesn't work, here's how to find it out manually:
 
-- Linux: Run the command `ls /dev/ttyACM*`. One of the names it prints (there
+- Linux: Run the command ``ls /dev/ttyACM*``. One of the names it prints (there
   will probably only be one) is the device. Try them each if there are multiple,
   or unplug the dongle and see which one disappears if you run the command
-  again. If you get a permissions error, running `sudo usermod -aG dialout
-  $USER` will probably fix it.
+  again. If you get a permissions error, running ``sudo usermod -aG dialout
+  $USER`` will probably fix it.
 
-- Windows: Open Device Manager (run `devmgmt.msc`) and look under "Ports (COM &
+- Windows: Open Device Manager (run ``devmgmt.msc``) and look under "Ports (COM &
   LPT)". Find a device whose name includes "Bluegiga". The name you need is in
   parentheses at the end of the line (it will be "COM" followed by a number).
 
-- Mac: Same as Linux, replacing `ttyACM` with `tty.usb`.
+- Mac: Same as Linux, replacing ``ttyACM`` with ``tty.usb``.
 
 Using the native Bluetooth adapter (Linux)
 ------------------------------------------
@@ -124,12 +125,12 @@ to debug the values used during connecting.
 Process data using handlers
 ---------------------------
 
-To process the data, you can call **MyoRaw.add_emg_handler** or
-**MyoRaw.add_imu_handler**; see `examples/emg.py` for example reference.
+To process the data, you can call ``MyoRaw.add_emg_handler`` or
+``MyoRaw.add_imu_handler``; see *examples/emg.py* for example reference.
 
 If your Myo has firmware v1.0 or higher, it also performs Thalmic's gesture
 classification onboard, and returns that information. Use
-**MyoRaw.add_arm_handler** and **MyoRaw.add_pose_handler**. Note that you
+``MyoRaw.add_arm_handler`` and ``MyoRaw.add_pose_handler``. Note that you
 will need to perform the sync gesture after starting the program (the Myo will
 vibrate as normal when it is synced).
 
@@ -148,14 +149,15 @@ Perform the sync gesture as described by `Myo Support`_
 
 .. _`Myo Support`: https://support.getmyo.com/hc/en-us/articles/200755509-How-to-perform-the-sync-gesture/
 
+
 Examples
 ========
 
-Before running the examples make sure you have the `extras` requirements
+Before running the examples make sure you have the ``extras`` requirements
 installed as described above.
 
-To run an example change directory to the `examples` folder and execute
-it with python, e.g. `python emg.py`.
+To run an example change directory to the *examples* folder and execute
+it with python, e.g. *python emg.py*.
 
 emg.py (try out communication and display EMG readings)
 -------------------------------------------------------
@@ -183,8 +185,8 @@ of the current pose.
 After you have done some training the Myo class in this file can
 be used to notify a program each time a pose starts. If run as a standalone
 script, it will simply print out the pose number each time a new pose is
-detected. Use **Myo.add_raw_pose_handler** (rather than add_pose_handler) to be
-notified of poses from this class's classifier, rather than Thalmic's onboard
+detected. Use ``Myo.add_raw_pose_handler`` (rather than ``add_pose_handler``) to
+be notified of poses from this class's classifier, rather than Thalmic's onboard
 processing.
 
 Tips for classification
