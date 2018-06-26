@@ -20,13 +20,15 @@ def battery_handler(battery_level):
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--tty', default=None, help='The Myo dongle device (autodetected if omitted)')
+group = parser.add_mutually_exclusive_group()
+group.add_argument('--tty', default=None, help='The Myo dongle device (autodetected if omitted)')
+group.add_argument('--native', default=False, action='store_true', help='Use a native Bluetooth stack')
 parser.add_argument('--mac', default=None, help='The Myo MAC address (arbitrarily detected if omitted)')
 parser.add_argument('--filtered', default=False, action='store_true', help='Get filtered EMG data')
 args = parser.parse_args()
 
-# setup the Myo dongle
-myo = MyoRaw(args.tty)
+# setup the BLED112 dongle or a native Bluetooth stack with bluepy
+myo = MyoRaw(args.tty, args.native)
 # add handlers to process EMG, IMU and battery level data
 myo.add_emg_handler(emg_handler)
 myo.add_imu_handler(imu_handler)

@@ -39,7 +39,11 @@ def write_data(writer, data):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--tty', default=None, help='The Myo dongle device')
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument('--tty', default=None,
+                        help='The Myo dongle device (autodetected if omitted)')
+    group.add_argument('--native', default=False, action='store_true',
+                        help='Use a native Bluetooth stack')
     parser.add_argument('--mac', default=None, help='The Myo device')
     parser.add_argument('--raw', default=False, action='store_true',
                         help='Switch between filtered or raw EMG data')
@@ -62,7 +66,7 @@ if __name__ == '__main__':
                             quoting=csv.QUOTE_MINIMAL)
     imu_writer.writerow(imu_header)
 
-    m = MyoRaw(args.tty)
+    m = MyoRaw(args.tty, args.native)
     m.add_emg_handler(lambda *args: write_data(emg_writer, args))
     m.add_imu_handler(lambda *args: write_data(imu_writer, args))
     m.connect(args.mac, not args.raw)
