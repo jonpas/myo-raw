@@ -27,6 +27,7 @@ setup(
     install_requires=['pyserial>=3.4',],
     python_requires='>=3.3',
     extras_require={
+        'native':['bluepy>=1.1.4',],
         'emg':['pygame>=1.9.3',],
         'classification':['numpy>=1.13.3', 'pygame>=1.9.3', 'scikit-learn>=0.19.1',],
     },

@@ -27,7 +27,7 @@ class Packet(object):
              ' '.join('%02X' % b for b in list(self.payload)))
 
 
-class BT(object):
+class BLED112(object):
     '''Implements the non-Myo-specific details of the Bluetooth protocol.'''
     def __init__(self, tty):
         if tty is None:

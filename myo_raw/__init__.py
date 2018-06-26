@@ -10,7 +10,14 @@
 
 import enum
 import struct
-from .bluetooth import BT
+from .bled112 import BLED112
+try:
+    from .native import Native
+except ImportError:
+    native_support = False
+else:
+    native_support = True
+
 
 class Arm(enum.Enum):
     UNKNOWN = 0
@@ -37,8 +44,11 @@ class Pose(enum.Enum):
 class MyoRaw(object):
     '''Implements the Myo-specific communication protocol.'''
 
-    def __init__(self, tty=None):
-        self.bt = BT(tty)
+    def __init__(self, tty=None, native=False):
+        if native and not native_support:
+            raise ImportError('bluepy is required to use a native Bluetooth adapter')
+        self.backend = Native() if native else BLED112(tty)
+        self.native = native
         self.emg_handlers = []
         self.imu_handlers = []
         self.arm_handlers = []
@@ -46,13 +56,13 @@ class MyoRaw(object):
         self.battery_handlers = []
 
     def run(self, timeout=None):
-        self.bt.recv_packet(timeout)
+        self.backend.recv_packet(timeout)
 
     def connect(self, mac=None, filtered=False):
         # scan for a Myo armband
-        mac = self.bt.scan('4248124a7f2c4847b9de04a9010006d5', mac)
+        mac = self.backend.scan('4248124a7f2c4847b9de04a9010006d5', mac)
         # connect to a Myo armband
-        self.bt.connect(mac)
+        self.backend.connect(mac)
 
         # get firmware version
         firmware = self.read_attr(0x17)
@@ -200,16 +210,16 @@ class MyoRaw(object):
             pay = packet.payload[5:]
             handle_data(attr, pay)
 
-        self.bt.add_handler(wrapped_handle_data)
+        self.backend.add_handler(handle_data if self.native else wrapped_handle_data)
 
     def write_attr(self, attr, val):
-        self.bt.write_attr(attr, val)
+        self.backend.write_attr(attr, val)
 
     def read_attr(self, attr):
-        return self.bt.read_attr(attr)
+        return self.backend.read_attr(attr)
 
     def disconnect(self):
-        self.bt.disconnect()
+        self.backend.disconnect()
 
     def sleep_mode(self, mode):
         self.write_attr(0x19, struct.pack('<3B', 9, 1, mode))
