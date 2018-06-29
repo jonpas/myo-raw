@@ -13,6 +13,7 @@ Welcome to myo-raw's documentation!
 
    overview
    notes
+   api
 
 
 Indices and tables
