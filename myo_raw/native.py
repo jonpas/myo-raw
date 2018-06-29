@@ -8,6 +8,7 @@
 from bluepy import btle
 
 class Delegate(btle.DefaultDelegate):
+    '''Store handlers to be called from a bluepy Peripheral on receiving notifications'''
 
     def __init__(self):
         super().__init__()
@@ -18,6 +19,7 @@ class Delegate(btle.DefaultDelegate):
             handler(cHandle, data)
 
 class Native(btle.Peripheral):
+    '''Non-Myo-specific Bluetooth backend based on a bluepy to use standard Bluetooth adapters.'''
 
     def __init__(self):
         super().__init__()

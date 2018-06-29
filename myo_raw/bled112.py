@@ -15,6 +15,8 @@ import serial
 from serial.tools import list_ports
 
 class Packet(object):
+    '''BLED112 packet representation'''
+
     def __init__(self, ords):
         self.typ = ords[0]
         self.cls = ords[2]
@@ -28,7 +30,8 @@ class Packet(object):
 
 
 class BLED112(object):
-    '''Implements the non-Myo-specific details of the Bluetooth protocol.'''
+    '''Non-Myo-specific Bluetooth backend using the provided BLED112 dongle with pyserial.'''
+
     def __init__(self, tty):
         if tty is None:
             tty = self._detect_tty()
