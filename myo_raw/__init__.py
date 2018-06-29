@@ -61,6 +61,7 @@ class MyoRaw(object):
     def connect(self, mac=None, filtered=False):
         # scan for a Myo armband
         mac = self.backend.scan('4248124a7f2c4847b9de04a9010006d5', mac)
+        print('connecting to the Myo armband: {0}'.format(mac))
         # connect to a Myo armband
         self.backend.connect(mac)
 

@@ -33,9 +33,8 @@ class Native(btle.Peripheral):
             for dev in devices:
                 uuid = next(item[2] for item in dev.getScanData() if item[0] == 6)
                 if target_uuid == uuid:
-                    print('found a Myo armband (MAC address: {0})'.format(dev.addr))
+                    print('found a Bluetooth device (MAC address: {0})'.format(dev.addr))
                     if target_address is None or target_address.lower() == dev.addr:
-                        print('selected {0}'.format(dev.addr))
                         return dev.addr
 
     def add_handler(self, handler):

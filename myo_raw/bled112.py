@@ -33,7 +33,7 @@ class BLED112(object):
         if tty is None:
             tty = self.detect_tty()
         if tty is None:
-            raise ValueError('Myo dongle not found!')
+            raise ValueError('Bluegiga BLED112 dongle not found!')
         self.conn = None
         self.ser = serial.Serial(port=tty, baudrate=9600, dsrdtr=1)
         self.buf = []
@@ -134,15 +134,13 @@ class BLED112(object):
             if packet.payload.endswith(bytes.fromhex(target_uuid)):
                 address = list(list(packet.payload[2:8]))
                 address_string = ':'.join(format(item, '02x') for item in reversed(address))
-                print('found a Myo armband (MAC address: {0})'.format(address_string))
+                print('found a Bluetooth device (MAC address: {0})'.format(address_string))
                 if target_address is None or target_address.lower() == address_string:
                     # stop scanning and return the found mac address
                     self.send_command(6, 4)
-                    print('selected {0}'.format(address_string))
                     return address_string
 
     def connect(self, target_address):
-        # connect to the Myo armband
         address = [int(item, 16) for item in reversed(target_address.split(':'))]
         conn_pkt = self.send_command(6, 3, struct.pack('<6sBHHHH', bytes(address), 0, 6, 6, 64, 0))
         self.conn = list(conn_pkt.payload)[-1]
