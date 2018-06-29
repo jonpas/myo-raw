@@ -31,7 +31,7 @@ class BLED112(object):
     '''Implements the non-Myo-specific details of the Bluetooth protocol.'''
     def __init__(self, tty):
         if tty is None:
-            tty = self.detect_tty()
+            tty = self._detect_tty()
         if tty is None:
             raise ValueError('Bluegiga BLED112 dongle not found!')
         self.conn = None
@@ -41,7 +41,7 @@ class BLED112(object):
         self.handlers = []
 
     @staticmethod
-    def detect_tty():
+    def _detect_tty():
         '''Try to find a Bluegiga BLED112 dongle'''
         for port, desc, hwid in list_ports.comports():
             if re.search(r'PID=2458:0*1', hwid):
@@ -60,23 +60,13 @@ class BLED112(object):
             if not c:
                 return None
 
-            ret = self.proc_byte(ord(c))
+            ret = self._proc_byte(ord(c))
             if ret:
                 if ret.typ == 0x80:
-                    self.handle_event(ret)
+                    self._handle_event(ret)
                 return ret
 
-    def recv_packets(self, timeout=.5):
-        res = []
-        t0 = time.time()
-        while time.time() < t0 + timeout:
-            p = self.recv_packet(t0 + timeout - time.time())
-            if not p:
-                return res
-            res.append(p)
-        return res
-
-    def proc_byte(self, c):
+    def _proc_byte(self, c):
         if not self.buf:
             if c in [0x00, 0x80, 0x08, 0x88]:  # [BLE response pkt, BLE event pkt, wifi response pkt, wifi event pkt]
                 self.buf.append(c)
@@ -94,7 +84,7 @@ class BLED112(object):
             return p
         return None
 
-    def handle_event(self, p):
+    def _handle_event(self, p):
         for h in self.handlers:
             h(p)
 
@@ -107,7 +97,7 @@ class BLED112(object):
         except ValueError:
             pass
 
-    def wait_event(self, cls, cmd):
+    def _wait_event(self, cls, cmd):
         res = [None]
 
         def h(p):
@@ -122,13 +112,13 @@ class BLED112(object):
     # specific BLE commands
     def scan(self, target_uuid, target_address):
         # stop scanning and terminate previous connection 0, 1 and 2
-        self.send_command(6, 4)
+        self._send_command(6, 4)
         for connection_number in range(3):
-            self.send_command(3, 0, struct.pack('<B', connection_number))
+            self._send_command(3, 0, struct.pack('<B', connection_number))
 
         # start scanning
         print('scanning...')
-        self.send_command(6, 2, b'\x01')
+        self._send_command(6, 2, b'\x01')
         while True:
             packet = self.recv_packet()
             if packet.payload.endswith(bytes.fromhex(target_uuid)):
@@ -137,40 +127,37 @@ class BLED112(object):
                 print('found a Bluetooth device (MAC address: {0})'.format(address_string))
                 if target_address is None or target_address.lower() == address_string:
                     # stop scanning and return the found mac address
-                    self.send_command(6, 4)
+                    self._send_command(6, 4)
                     return address_string
 
     def connect(self, target_address):
         address = [int(item, 16) for item in reversed(target_address.split(':'))]
-        conn_pkt = self.send_command(6, 3, struct.pack('<6sBHHHH', bytes(address), 0, 6, 6, 64, 0))
+        conn_pkt = self._send_command(6, 3, struct.pack('<6sBHHHH', bytes(address), 0, 6, 6, 64, 0))
         self.conn = list(conn_pkt.payload)[-1]
-        self.wait_event(3, 0)
-
-    def get_connections(self):
-        return self.send_command(0, 6)
+        self._wait_event(3, 0)
 
     def disconnect(self):
         if self.conn is not None:
-            return self.send_command(3, 0, struct.pack('<B', self.conn))
+            return self._send_command(3, 0, struct.pack('<B', self.conn))
         return None
 
     def read_attr(self, attr):
         if self.conn is not None:
-            self.send_command(4, 4, struct.pack('<BH', self.conn, attr))
-            ble_payload = self.wait_event(4, 5).payload
+            self._send_command(4, 4, struct.pack('<BH', self.conn, attr))
+            ble_payload = self._wait_event(4, 5).payload
             # strip off the 4 byte L2CAP header and the payload length byte of the ble payload field
             return ble_payload[5:]
         return None
 
     def write_attr(self, attr, val):
         if self.conn is not None:
-            self.send_command(4, 5, struct.pack('<BHB', self.conn, attr, len(val)) + val)
-            ble_payload = self.wait_event(4, 1).payload
+            self._send_command(4, 5, struct.pack('<BHB', self.conn, attr, len(val)) + val)
+            ble_payload = self._wait_event(4, 1).payload
             # strip off the 4 byte L2CAP header and the payload length byte of the ble payload field
             return ble_payload[5:]
         return None
 
-    def send_command(self, cls, cmd, payload=b''):
+    def _send_command(self, cls, cmd, payload=b''):
         s = struct.pack('<4B', 0, len(payload), cls, cmd) + payload
         self.ser.write(s)
 
@@ -180,4 +167,4 @@ class BLED112(object):
             if p.typ == 0:
                 return p
             # not a response: must be an event
-            self.handle_event(p)
+            self._handle_event(p)
