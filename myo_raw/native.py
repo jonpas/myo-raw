@@ -40,6 +40,12 @@ class Native(btle.Peripheral):
     def add_handler(self, handler):
         self.delegate.handlers.append(handler)
 
+    def remove_handler(self, handler):
+        try:
+            self.delegate.handlers.remove(handler)
+        except ValueError:
+            pass
+
     def recv_packet(self, timeout=None):
         self.waitForNotifications(timeout)
 
