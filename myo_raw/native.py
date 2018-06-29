@@ -25,7 +25,7 @@ class Native(btle.Peripheral):
         print('using bluepy backend')
 
     @staticmethod
-    def scan(target_uuid, target_address):
+    def scan(target_uuid, target_address=None):
         print('scanning...')
         scanner = btle.Scanner()
         while True:

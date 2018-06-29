@@ -110,7 +110,7 @@ class BLED112(object):
         return res[0]
 
     # specific BLE commands
-    def scan(self, target_uuid, target_address):
+    def scan(self, target_uuid, target_address=None):
         # stop scanning and terminate previous connection 0, 1 and 2
         self._send_command(6, 4)
         for connection_number in range(3):
