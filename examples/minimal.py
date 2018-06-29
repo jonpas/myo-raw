@@ -6,7 +6,7 @@
 #
 
 import argparse
-from myo_raw import MyoRaw
+from myo_raw import MyoRaw, DataCategory
 
 
 def emg_handler(emg, moving):
@@ -30,9 +30,9 @@ args = parser.parse_args()
 # setup the BLED112 dongle or a native Bluetooth stack with bluepy
 myo = MyoRaw(args.tty, args.native)
 # add handlers to process EMG, IMU and battery level data
-myo.add_emg_handler(emg_handler)
-myo.add_imu_handler(imu_handler)
-myo.add_battery_handler(battery_handler)
+myo.add_handler(DataCategory.EMG, emg_handler)
+myo.add_handler(DataCategory.IMU, imu_handler)
+myo.add_handler(DataCategory.BATTERY, battery_handler)
 # connect to a Myo device and set whether the EMG data shall be filtered or not
 myo.connect(args.mac, args.filtered)
 # disable sleep to avoid disconnects while retrieving data

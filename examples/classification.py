@@ -9,7 +9,7 @@ from collections import Counter, deque
 import sys
 import struct
 import numpy as np
-from myo_raw import MyoRaw
+from myo_raw import MyoRaw, DataCategory
 try:
     from sklearn import neighbors, svm
     HAVE_SK = True
@@ -79,7 +79,7 @@ class Myo(MyoRaw):
         self.cls = cls
         self.history = deque([0] * Myo.HIST_LEN, Myo.HIST_LEN)
         self.history_cnt = Counter(self.history)
-        self.add_emg_handler(self.emg_handler)
+        self.add_handler(DataCategory.EMG, self.emg_handler)
         self.last_pose = None
         self.pose_handlers = []
 
@@ -119,7 +119,7 @@ def classify(m):
         font = pygame.font.Font(None, 30)
 
     hnd = EMGHandler(m)
-    m.add_emg_handler(hnd)
+    m.add_handler(DataCategory.EMG, hnd)
     m.connect(filtered=True)
 
     while True:

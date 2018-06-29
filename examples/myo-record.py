@@ -12,7 +12,7 @@ import time
 from datetime import datetime
 from pathlib import Path
 
-from myo_raw import MyoRaw
+from myo_raw import MyoRaw, DataCategory
 
 emg_header = ['timestamp', 'emg1', 'emg2', 'emg3', 'emg4', 'emg5',
               'emg6', 'emg7', 'emg8', 'moving']
@@ -67,8 +67,8 @@ if __name__ == '__main__':
     imu_writer.writerow(imu_header)
 
     m = MyoRaw(args.tty, args.native)
-    m.add_emg_handler(lambda *args: write_data(emg_writer, args))
-    m.add_imu_handler(lambda *args: write_data(imu_writer, args))
+    m.add_handler(DataCategory.EMG, lambda *args: write_data(emg_writer, args))
+    m.add_handler(DataCategory.IMU, lambda *args: write_data(imu_writer, args))
     m.connect(args.mac, not args.raw)
 
     # Enable never sleep mode.

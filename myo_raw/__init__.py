@@ -41,6 +41,10 @@ class Pose(enum.Enum):
     UNKNOWN = 255
 
 
+class DataCategory(enum.Enum):
+    '''Categories of data available from the Myo armband'''
+    ARM, BATTERY, EMG, IMU, POSE = range(5)
+
 class MyoRaw(object):
     '''Implements the Myo-specific communication protocol.'''
 
@@ -49,11 +53,7 @@ class MyoRaw(object):
             raise ImportError('bluepy is required to use a native Bluetooth adapter')
         self.backend = Native() if native else BLED112(tty)
         self.native = native
-        self.emg_handlers = []
-        self.imu_handlers = []
-        self.arm_handlers = []
-        self.pose_handlers = []
-        self.battery_handlers = []
+        self.handlers = {data_category:[] for data_category in DataCategory}
 
     def run(self, timeout=None):
         self.backend.recv_packet(timeout)
@@ -166,7 +166,7 @@ class MyoRaw(object):
                 # something
                 emg = vals[:8]
                 moving = vals[8]
-                self.on_emg(emg, moving)
+                self._call_handlers(DataCategory.EMG, emg, moving)
             # Read notification handles corresponding to the for EMG characteristics
             elif attr == 0x2b or attr == 0x2e or attr == 0x31 or attr == 0x34:
                 '''According to http://developerblog.myo.com/myocraft-emg-in-the-bluetooth-protocol/
@@ -176,15 +176,15 @@ class MyoRaw(object):
                 '''
                 emg1 = struct.unpack('<8b', pay[:8])
                 emg2 = struct.unpack('<8b', pay[8:])
-                self.on_emg(emg1, 0)
-                self.on_emg(emg2, 0)
+                self._call_handlers(DataCategory.EMG, emg1, 0)
+                self._call_handlers(DataCategory.EMG, emg2, 0)
             # Read IMU characteristic handle
             elif attr == 0x1c:
                 vals = struct.unpack('<10h', pay)
                 quat = vals[:4]
                 acc = vals[4:7]
                 gyro = vals[7:10]
-                self.on_imu(quat, acc, gyro)
+                self._call_handlers(DataCategory.IMU, quat, acc, gyro)
             # Read classifier characteristic handle
             elif attr == 0x23:
                 # note that older versions of the Myo send three bytes
@@ -192,15 +192,15 @@ class MyoRaw(object):
                 typ, val, xdir = struct.unpack('<3B', pay[:3])
 
                 if typ == 1:  # on arm
-                    self.on_arm(Arm(val), XDirection(xdir))
+                    self._call_handlers(DataCategory.ARM, Arm(val), XDirection(xdir))
                 elif typ == 2:  # removed from arm
-                    self.on_arm(Arm.UNKNOWN, XDirection.UNKNOWN)
+                    self._call_handlers(DataCategory.ARM, Arm.UNKNOWN, XDirection.UNKNOWN)
                 elif typ == 3:  # pose
-                    self.on_pose(Pose(val))
+                    self._call_handlers(DataCategory.POSE, Pose(val))
             # Read battery characteristic handle
             elif attr == 0x11:
                 battery_level = ord(pay)
-                self.on_battery(battery_level)
+                self._call_handlers(DataCategory.BATTERY, battery_level)
             else:
                 print('data with unknown attr: %02X %s' % (attr, pay))
 
@@ -240,67 +240,38 @@ class MyoRaw(object):
     #     battery_level = self.read_attr(0x11)
     #     return ord(battery_level[0])
 
-    def add_emg_handler(self, h):
-        self.emg_handlers.append(h)
+    def add_handler(self, data_category, handler):
+        '''
+        Add a handler to process data of a specific category
 
-    def pop_emg_handler(self, i=-1):
-        return self.emg_handlers.pop(i)
+        :param data_category: data category of the handler function
+        :param handler: function to be called
+        '''
+        self.handlers[data_category].append(handler)
 
-    def clear_emg_handlers(self):
-        self.emg_handlers.clear()
+    def pop_handler(self, data_category, index=-1):
+        '''
+        Remove and return the handler of a specific data category at index (default last)
 
-    def add_imu_handler(self, h):
-        self.imu_handlers.append(h)
+        :param data_category: data category of the handler function
+        :param index: index of the handler to be removed and returned
+        :returns: the removed handler
+        '''
+        return self.handlers[data_category].pop(index)
 
-    def pop_imu_handler(self, i=-1):
-        return self.imu_handlers.pop(i)
+    def clear_handler(self, data_category):
+        '''
+        Remove all handlers of a given data category
 
-    def clear_imu_handlers(self):
-        self.imu_handlers.clear()
+        :param data_category: data category of the handler function
+        '''
+        self.handlers[data_category].clear()
 
-    def add_pose_handler(self, h):
-        self.pose_handlers.append(h)
+    def _call_handlers(self, data_category, *args):
+        '''
+        Call all handlers of a given data category
 
-    def pop_pose_handler(self, i=-1):
-        return self.pose_handlers.pop(i)
-
-    def clear_pose_handlers(self):
-        self.pose_handlers.clear()
-
-    def add_arm_handler(self, h):
-        self.arm_handlers.append(h)
-
-    def pop_arm_handler(self, i=-1):
-        return self.arm_handlers.pop(i)
-
-    def clear_arm_handlers(self):
-        self.arm_handlers.clear()
-
-    def add_battery_handler(self, h):
-        self.battery_handlers.append(h)
-
-    def pop_battery_handler(self, i=-1):
-        return self.battery_handlers.pop(i)
-
-    def clear_battery_handlers(self):
-        self.battery_handlers.clear()
-
-    def on_emg(self, emg, moving):
-        for h in self.emg_handlers:
-            h(emg, moving)
-
-    def on_imu(self, quat, acc, gyro):
-        for h in self.imu_handlers:
-            h(quat, acc, gyro)
-
-    def on_pose(self, p):
-        for h in self.pose_handlers:
-            h(p)
-
-    def on_arm(self, arm, xdir):
-        for h in self.arm_handlers:
-            h(arm, xdir)
-
-    def on_battery(self, battery_level):
-        for h in self.battery_handlers:
-            h(battery_level)
+        :param data_category: data category of the handler function
+        '''
+        for handler in self.handlers[data_category]:
+            handler(*args)

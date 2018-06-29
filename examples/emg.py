@@ -8,7 +8,7 @@
 
 import sys
 import time
-from myo_raw import MyoRaw
+from myo_raw import MyoRaw, DataCategory
 try:
     import pygame
     from pygame.locals import *
@@ -62,13 +62,13 @@ def proc_battery(battery_level):
         m.set_leds([128, 128, 255], [128, 128, 255])
 
 m = MyoRaw(sys.argv[1] if len(sys.argv) >= 2 else None)
-m.add_emg_handler(proc_emg)
-m.add_battery_handler(proc_battery)
+m.add_handler(DataCategory.EMG, proc_emg)
+m.add_handler(DataCategory.BATTERY, proc_battery)
 m.connect()
 
-m.add_arm_handler(lambda arm, xdir: print('arm', arm, 'xdir', xdir))
-m.add_pose_handler(lambda p: print('pose', p))
-# m.add_imu_handler(lambda quat, acc, gyro: print('quaternion', quat))
+m.add_handler(DataCategory.ARM, lambda arm, xdir: print('arm', arm, 'xdir', xdir))
+m.add_handler(DataCategory.POSE, lambda p: print('pose', p))
+# m.add_handler(DataCategory.IMU, lambda quat, acc, gyro: print('quaternion', quat))
 m.sleep_mode(1)
 m.set_leds([128, 128, 255], [128, 128, 255])  # purple logo and bar LEDs
 m.vibrate(1)
