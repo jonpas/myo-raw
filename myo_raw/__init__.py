@@ -216,19 +216,19 @@ class MyoRaw(object):
     def disconnect(self):
         self.backend.disconnect()
 
-    def sleep_mode(self, mode):
-        self.backend.write_attr(0x19, struct.pack('<3B', 9, 1, mode))
+    def set_sleep_mode(self, mode):
+        assert mode in [0, 1], 'mode must be 0 or 1'
+        self.backend.write_attr(0x19, struct.pack('<3B', 0x09, 1, mode))
 
     def power_off(self):
-        self.backend.write_attr(0x19, b'\x04\x00')
+        self.backend.write_attr(0x19, struct.pack('<2B', 0x04, 0))
 
     def vibrate(self, length):
-        if length in range(1, 4):
-            # first byte tells it to vibrate; purpose of second byte is unknown (payload size?)
-            self.backend.write_attr(0x19, struct.pack('<3B', 3, 1, length))
+        assert length in [1, 2, 3], 'length must be 1, 2, or 3'
+        self.backend.write_attr(0x19, struct.pack('<3B', 0x03, 1, length))
 
     def set_leds(self, logo, line):
-        self.backend.write_attr(0x19, struct.pack('<8B', 6, 6, *(logo + line)))
+        self.backend.write_attr(0x19, struct.pack('<8B', 0x06, 6, *(logo + line)))
 
     # def get_battery_level(self):
     #     battery_level = self.backend.read_attr(0x11)

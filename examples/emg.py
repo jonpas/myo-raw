@@ -69,7 +69,7 @@ m.connect()
 m.add_handler(DataCategory.ARM, lambda arm, xdir: print('arm', arm, 'xdir', xdir))
 m.add_handler(DataCategory.POSE, lambda p: print('pose', p))
 # m.add_handler(DataCategory.IMU, lambda quat, acc, gyro: print('quaternion', quat))
-m.sleep_mode(1)
+m.set_sleep_mode(1)
 m.set_leds([128, 128, 255], [128, 128, 255])  # purple logo and bar LEDs
 m.vibrate(1)
 

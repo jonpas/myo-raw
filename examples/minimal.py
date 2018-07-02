@@ -36,7 +36,7 @@ myo.add_handler(DataCategory.BATTERY, battery_handler)
 # connect to a Myo device and set whether the EMG data shall be filtered or not
 myo.connect(args.mac, args.filtered)
 # disable sleep to avoid disconnects while retrieving data
-myo.sleep_mode(1)
+myo.set_sleep_mode(1)
 # vibrate and change colors (green logo, blue bar) to signalise a successfull setup
 myo.vibrate(1)
 myo.set_leds([0, 255, 0], [0, 0, 255])

@@ -72,7 +72,7 @@ if __name__ == '__main__':
     m.connect(args.mac, not args.raw)
 
     # Enable never sleep mode.
-    m.sleep_mode(1)
+    m.set_sleep_mode(1)
 
     # vibrate to signalise which Myo will start to stream data
     m.vibrate(1)
