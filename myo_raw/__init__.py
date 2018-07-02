@@ -56,6 +56,11 @@ class MyoRaw(object):
         self.handlers = {data_category:[] for data_category in DataCategory}
 
     def run(self, timeout=None):
+        '''
+        Block until a packet is received or until the given timeout has elapsed
+
+        :params timeout: the maximum amount of time to wait for a packet
+        '''
         self.backend.recv_packet(timeout)
 
     def connect(self, mac=None, filtered=False):
@@ -214,29 +219,67 @@ class MyoRaw(object):
         self.backend.add_handler(handle_data if self.native else wrapped_handle_data)
 
     def disconnect(self):
+        '''
+        Disconnect from the Myo armband
+        '''
         self.backend.disconnect()
 
     def set_sleep_mode(self, mode):
+        '''
+        Set the sleep mode of the Myo armband
+
+        :params mode: the sleep mode - 0: sleep after a period of inactiviy, 1: disable sleep
+        '''
         assert mode in [0, 1], 'mode must be 0 or 1'
         self.backend.write_attr(0x19, struct.pack('<3B', 0x09, 1, mode))
 
     def power_off(self):
+        '''
+        Put the Myo armband into a deep sleep state (reactivate by charging it over USB)
+
+        '''
         self.backend.write_attr(0x19, struct.pack('<2B', 0x04, 0))
 
     def vibrate(self, length):
+        '''
+        Vibrate the Myo armband
+
+        :params length: the vibration duration - 1: short, 2: medium, 3: long
+        '''
         assert length in [1, 2, 3], 'length must be 1, 2, or 3'
         self.backend.write_attr(0x19, struct.pack('<3B', 0x03, 1, length))
 
     def set_leds(self, logo, line):
+        '''
+        Set the colors of the logo LED and the line LED
+
+        :params logo: the RGB (iterable of integers from 0 to 255) logo color value
+        :params line: the RGB (iterable of integers from 0 to 255) line color value
+        '''
         self.backend.write_attr(0x19, struct.pack('<8B', 0x06, 6, *(logo + line)))
 
     def get_battery_level(self):
+        '''
+        Retrieve the current battery level percentage
+
+        :returns: the current battery level
+        '''
         return struct.unpack('<B', self.backend.read_attr(0x11))[0]
 
     def set_name(self, name):
+        '''
+        Set the name of the Myo armband
+
+        :params name: the name to be set
+        '''
         self.backend.write_attr(0x03, name.encode('utf-8'))
 
     def get_name(self):
+        '''
+        Get the name of the Myo armband
+
+        :returns: the name
+        '''
         return self.backend.read_attr(0x03).decode('utf-8')
 
     def add_handler(self, data_category, handler):
