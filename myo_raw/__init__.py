@@ -101,8 +101,8 @@ class MyoRaw(object):
             self.backend.write_attr(0x19, struct.pack('<BBBBHBBBBB', 2, 9, 2, 1, C, emg_smooth, C // emg_hz, imu_hz, 0, 0))
 
         else:
-            name = self.backend.read_attr(0x03)
-            print('device name: %s' % name.decode('utf-8'))
+            print('device name: {}'.format(self.get_name()))
+            print('battery level: {} %'.format(self.get_battery_level()))
 
             # suscribe to IMU notifications to enable IMU data
             self.backend.write_attr(0x1d, b'\x01\x00')
@@ -230,9 +230,14 @@ class MyoRaw(object):
     def set_leds(self, logo, line):
         self.backend.write_attr(0x19, struct.pack('<8B', 0x06, 6, *(logo + line)))
 
-    # def get_battery_level(self):
-    #     battery_level = self.backend.read_attr(0x11)
-    #     return ord(battery_level[0])
+    def get_battery_level(self):
+        return struct.unpack('<B', self.backend.read_attr(0x11))[0]
+
+    def set_name(self, name):
+        self.backend.write_attr(0x03, name.encode('utf-8'))
+
+    def get_name(self):
+        return self.backend.read_attr(0x03).decode('utf-8')
 
     def add_handler(self, data_category, handler):
         '''
