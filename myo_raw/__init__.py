@@ -66,24 +66,24 @@ class MyoRaw(object):
         self.backend.connect(mac)
 
         # get firmware version
-        firmware = self.read_attr(0x17)
+        firmware = self.backend.read_attr(0x17)
         version = struct.unpack('<HHHH', firmware)
         print('firmware version: %d.%d.%d.%d' % version)
 
         if version < (1, 0, 0, 0):
             # don't know what these do; Myo Connect sends them, though we get data
             # fine without them
-            self.write_attr(0x19, b'\x01\x02\x00\x00')
+            self.backend.write_attr(0x19, b'\x01\x02\x00\x00')
             # Subscribe for notifications from 4 EMG data channels
-            self.write_attr(0x2f, b'\x01\x00')
-            self.write_attr(0x2c, b'\x01\x00')
-            self.write_attr(0x32, b'\x01\x00')
-            self.write_attr(0x35, b'\x01\x00')
+            self.backend.write_attr(0x2f, b'\x01\x00')
+            self.backend.write_attr(0x2c, b'\x01\x00')
+            self.backend.write_attr(0x32, b'\x01\x00')
+            self.backend.write_attr(0x35, b'\x01\x00')
 
             # suscribe to EMG notifications to enable EMG data
-            self.write_attr(0x28, b'\x01\x00')
+            self.backend.write_attr(0x28, b'\x01\x00')
             # suscribe to IMU notifications to enable IMU data
-            self.write_attr(0x1d, b'\x01\x00')
+            self.backend.write_attr(0x1d, b'\x01\x00')
 
             # Sampling rate of the underlying EMG sensor, capped to 1000. If it's
             # less than 1000, emg_hz is correct. If it is greater, the actual
@@ -98,25 +98,25 @@ class MyoRaw(object):
             imu_hz = 50
 
             # send sensor parameters, or we don't get any data
-            self.write_attr(0x19, struct.pack('<BBBBHBBBBB', 2, 9, 2, 1, C, emg_smooth, C // emg_hz, imu_hz, 0, 0))
+            self.backend.write_attr(0x19, struct.pack('<BBBBHBBBBB', 2, 9, 2, 1, C, emg_smooth, C // emg_hz, imu_hz, 0, 0))
 
         else:
-            name = self.read_attr(0x03)
+            name = self.backend.read_attr(0x03)
             print('device name: %s' % name.decode('utf-8'))
 
             # suscribe to IMU notifications to enable IMU data
-            self.write_attr(0x1d, b'\x01\x00')
+            self.backend.write_attr(0x1d, b'\x01\x00')
             # suscribe to classifier indications to enable on/off arm notifications
-            self.write_attr(0x24, b'\x02\x00')
+            self.backend.write_attr(0x24, b'\x02\x00')
             # enable EMG notifications
             ''' To get raw EMG signals, we subscribe to the four EMG notification
             characteristics by writing a 0x0100 command to the corresponding handles.
             '''
             if not filtered:
-                self.write_attr(0x2c, b'\x01\x00')  # Suscribe to EmgData0Characteristic
-                self.write_attr(0x2f, b'\x01\x00')  # Suscribe to EmgData1Characteristic
-                self.write_attr(0x32, b'\x01\x00')  # Suscribe to EmgData2Characteristic
-                self.write_attr(0x35, b'\x01\x00')  # Suscribe to EmgData3Characteristic
+                self.backend.write_attr(0x2c, b'\x01\x00')  # Suscribe to EmgData0Characteristic
+                self.backend.write_attr(0x2f, b'\x01\x00')  # Suscribe to EmgData1Characteristic
+                self.backend.write_attr(0x32, b'\x01\x00')  # Suscribe to EmgData2Characteristic
+                self.backend.write_attr(0x35, b'\x01\x00')  # Suscribe to EmgData3Characteristic
 
             '''Bytes sent to handle 0x19 (command characteristic) have the following
             format: [command, payload_size, EMG mode, IMU mode, classifier mode]
@@ -128,7 +128,7 @@ class MyoRaw(object):
                 0x01 -> send classifier events
             '''
             if not filtered:
-                self.write_attr(0x19, b'\x01\x03\x02\x01\x01')
+                self.backend.write_attr(0x19, b'\x01\x03\x02\x01\x01')
 
             '''Sending this sequence for v1.0 firmware seems to enable both raw data and
             pose notifications.
@@ -150,11 +150,11 @@ class MyoRaw(object):
             '''
             if filtered:
                 # suscribe to EMG notifications (not needed for raw signals)
-                self.write_attr(0x28, b'\x01\x00')
+                self.backend.write_attr(0x28, b'\x01\x00')
                 # set EMG and IMU, payload size = 3, EMG on, IMU on, classifier on
-                self.write_attr(0x19, b'\x01\x03\x01\x01\x01')
+                self.backend.write_attr(0x19, b'\x01\x03\x01\x01\x01')
             # enable battery notifications
-            self.write_attr(0x12, b'\x01\x10')
+            self.backend.write_attr(0x12, b'\x01\x10')
 
         # add data handlers
         def handle_data(attr, pay):
@@ -213,31 +213,25 @@ class MyoRaw(object):
 
         self.backend.add_handler(handle_data if self.native else wrapped_handle_data)
 
-    def write_attr(self, attr, val):
-        self.backend.write_attr(attr, val)
-
-    def read_attr(self, attr):
-        return self.backend.read_attr(attr)
-
     def disconnect(self):
         self.backend.disconnect()
 
     def sleep_mode(self, mode):
-        self.write_attr(0x19, struct.pack('<3B', 9, 1, mode))
+        self.backend.write_attr(0x19, struct.pack('<3B', 9, 1, mode))
 
     def power_off(self):
-        self.write_attr(0x19, b'\x04\x00')
+        self.backend.write_attr(0x19, b'\x04\x00')
 
     def vibrate(self, length):
         if length in range(1, 4):
             # first byte tells it to vibrate; purpose of second byte is unknown (payload size?)
-            self.write_attr(0x19, struct.pack('<3B', 3, 1, length))
+            self.backend.write_attr(0x19, struct.pack('<3B', 3, 1, length))
 
     def set_leds(self, logo, line):
-        self.write_attr(0x19, struct.pack('<8B', 6, 6, *(logo + line)))
+        self.backend.write_attr(0x19, struct.pack('<8B', 6, 6, *(logo + line)))
 
     # def get_battery_level(self):
-    #     battery_level = self.read_attr(0x11)
+    #     battery_level = self.backend.read_attr(0x11)
     #     return ord(battery_level[0])
 
     def add_handler(self, data_category, handler):
