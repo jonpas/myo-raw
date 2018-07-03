@@ -54,5 +54,5 @@ class Native(btle.Peripheral):
     def read_attr(self, attr):
         return self.readCharacteristic(attr)
 
-    def write_attr(self, attr, val):
-        return self.writeCharacteristic(attr, val, withResponse=True)
+    def write_attr(self, attr, val, wait_response=True):
+        return self.writeCharacteristic(attr, val, withResponse=wait_response)

@@ -233,12 +233,12 @@ class MyoRaw(object):
         assert mode in [0, 1], 'mode must be 0 or 1'
         self.backend.write_attr(0x19, struct.pack('<3B', 0x09, 1, mode))
 
-    def power_off(self):
+    def deep_sleep(self):
         '''
         Put the Myo armband into a deep sleep state (reactivate by charging it over USB)
 
         '''
-        self.backend.write_attr(0x19, struct.pack('<2B', 0x04, 0))
+        self.backend.write_attr(0x19, struct.pack('<2B', 0x04, 0), wait_response=False)
 
     def vibrate(self, length):
         '''

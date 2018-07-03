@@ -152,12 +152,13 @@ class BLED112(object):
             return ble_payload[5:]
         return None
 
-    def write_attr(self, attr, val):
+    def write_attr(self, attr, val, wait_response=True):
         if self.conn is not None:
             self._send_command(4, 5, struct.pack('<BHB', self.conn, attr, len(val)) + val)
-            ble_payload = self._wait_event(4, 1).payload
-            # strip off the 4 byte L2CAP header and the payload length byte of the ble payload field
-            return ble_payload[5:]
+            if wait_response:
+                ble_payload = self._wait_event(4, 1).payload
+                # strip off the 4 byte L2CAP header and the payload length byte of the ble payload field
+                return ble_payload[5:]
         return None
 
     def _send_command(self, cls, cmd, payload=b''):
