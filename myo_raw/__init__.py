@@ -14,9 +14,9 @@ from .bled112 import BLED112
 try:
     from .native import Native
 except ImportError:
-    native_support = False
+    NATIVE_SUPPORT = False
 else:
-    native_support = True
+    NATIVE_SUPPORT = True
 
 
 class Arm(enum.Enum):
@@ -49,7 +49,7 @@ class MyoRaw(object):
     '''Implements the Myo-specific communication protocol.'''
 
     def __init__(self, tty=None, native=False):
-        if native and not native_support:
+        if native and not NATIVE_SUPPORT:
             raise ImportError('bluepy is required to use a native Bluetooth adapter')
         self.backend = Native() if native else BLED112(tty)
         self.native = native
