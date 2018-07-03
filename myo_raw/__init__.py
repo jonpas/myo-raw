@@ -76,35 +76,30 @@ class MyoRaw(object):
         print('firmware version: %d.%d.%d.%d' % version)
 
         if version < (1, 0, 0, 0):
-            # don't know what these do; Myo Connect sends them, though we get data
-            # fine without them
+            # don't know what these do; Myo Connect sends them, though we get data fine without them
             self.backend.write_attr(0x19, b'\x01\x02\x00\x00')
             # Subscribe for notifications from 4 EMG data channels
             self.backend.write_attr(0x2f, b'\x01\x00')
             self.backend.write_attr(0x2c, b'\x01\x00')
             self.backend.write_attr(0x32, b'\x01\x00')
             self.backend.write_attr(0x35, b'\x01\x00')
-
             # suscribe to EMG notifications to enable EMG data
             self.backend.write_attr(0x28, b'\x01\x00')
             # suscribe to IMU notifications to enable IMU data
             self.backend.write_attr(0x1d, b'\x01\x00')
 
-            # Sampling rate of the underlying EMG sensor, capped to 1000. If it's
-            # less than 1000, emg_hz is correct. If it is greater, the actual
-            # framerate starts dropping inversely. Also, if this is much less than
-            # 1000, EMG data becomes slower to respond to changes. In conclusion,
-            # 1000 is probably a good value.
-            C = 1000
+            # Sampling rate of the underlying EMG sensor, capped to 1000. If it's less than 1000,
+            # emg_hz is correct. If it is greater, the actual framerate starts dropping inversely.
+            # Also, if this is much less than 1000, EMG data becomes slower to respond to changes.
+            # In conclusion, 1000 is probably a good value.
+            f_s = 1000
             emg_hz = 50
             # strength of low-pass filtering of EMG data
             emg_smooth = 100
-
             imu_hz = 50
-
             # send sensor parameters, or we don't get any data
-            self.backend.write_attr(0x19, struct.pack('<BBBBHBBBBB', 2, 9, 2, 1, C, emg_smooth, C // emg_hz, imu_hz, 0, 0))
-
+            data = struct.pack('<4BH5B', 2, 9, 2, 1, f_s, emg_smooth, f_s // emg_hz, imu_hz, 0, 0)
+            self.backend.write_attr(0x19, data)
         else:
             print('device name: {}'.format(self.get_name()))
             print('battery level: {} %'.format(self.get_battery_level()))
