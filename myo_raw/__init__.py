@@ -45,6 +45,14 @@ class DataCategory(enum.Enum):
     '''Categories of data available from the Myo armband'''
     ARM, BATTERY, EMG, IMU, POSE = range(5)
 
+class EMGMode(enum.IntEnum):
+    '''Modes of EMG data (sampling rate and applied filters)'''
+    OFF = 0x00
+    SMOOTHED = 0x01
+    RAW_FILTERED = 0x02
+    RAW = 0x03
+
+
 class MyoRaw(object):
     '''Implements the Myo-specific communication protocol.'''
 
@@ -63,7 +71,18 @@ class MyoRaw(object):
         '''
         self.backend.recv_packet(timeout)
 
-    def connect(self, mac=None, filtered=False):
+    def connect(self, mac=None, emg_mode=EMGMode.RAW):
+        '''
+        Connect to a Myo armband and enable streaming of available data
+
+        :param mac: the MAC address of the Myo (randomly chosen if None)
+        :param emg_mode: the mode of the EMG data stream (sampling rate and filters)
+
+          :0: deactivate EMG data
+          :1: 50 Hz sampling rate, smoothed and rectified signals ("hidden" EMG mode)
+          :2: 200 Hz sampling rate, power line noise filters (50 and 60 Hz notch filters)
+          :3: 200 Hz sampling rate, raw data
+        '''
         # scan for a Myo armband
         mac = self.backend.scan('4248124a7f2c4847b9de04a9010006d5', mac)
         print('connecting to the Myo armband: {0}'.format(mac))
@@ -108,53 +127,28 @@ class MyoRaw(object):
             self.backend.write_attr(0x1d, b'\x01\x00')
             # suscribe to classifier indications to enable on/off arm notifications
             self.backend.write_attr(0x24, b'\x02\x00')
+            # enable battery notifications
+            self.backend.write_attr(0x12, b'\x01\x10')
             # enable EMG notifications
-            ''' To get raw EMG signals, we subscribe to the four EMG notification
-            characteristics by writing a 0x0100 command to the corresponding handles.
-            '''
-            if not filtered:
+            if emg_mode in [EMGMode.RAW, EMGMode.RAW_FILTERED]:
                 self.backend.write_attr(0x2c, b'\x01\x00')  # Suscribe to EmgData0Characteristic
                 self.backend.write_attr(0x2f, b'\x01\x00')  # Suscribe to EmgData1Characteristic
                 self.backend.write_attr(0x32, b'\x01\x00')  # Suscribe to EmgData2Characteristic
                 self.backend.write_attr(0x35, b'\x01\x00')  # Suscribe to EmgData3Characteristic
-
-            '''Bytes sent to handle 0x19 (command characteristic) have the following
-            format: [command, payload_size, EMG mode, IMU mode, classifier mode]
-            According to the Myo BLE specification, the commands are:
-                0x01 -> set EMG and IMU
-                0x03 -> 3 bytes of payload
-                0x02 -> send 50Hz filtered signals
-                0x01 -> send IMU data streams
-                0x01 -> send classifier events
-            '''
-            if not filtered:
-                self.backend.write_attr(0x19, b'\x01\x03\x02\x01\x01')
-
-            '''Sending this sequence for v1.0 firmware seems to enable both raw data and
-            pose notifications.
-            '''
-
-            '''By writting a 0x0100 command to handle 0x28, some kind of "hidden" EMG
-            notification characteristic is activated. This characteristic is not
-            listed on the Myo services of the offical BLE specification from Thalmic
-            Labs. Also, in the second line where we tell the Myo to enable EMG and
-            IMU data streams and classifier events, the 0x01 command wich corresponds
-            to the EMG mode is not listed on the myohw_emg_mode_t struct of the Myo
-            BLE specification.
-            These two lines, besides enabling the IMU and the classifier, enable the
-            transmission of a stream of low-pass filtered EMG signals from the eight
-            sensor pods of the Myo armband (the "hidden" mode I mentioned above).
-            Instead of getting the raw EMG signals, we get rectified and smoothed
-            signals, a measure of the amplitude of the EMG (which is useful to have
-            a measure of muscle strength, but are not as useful as a truly raw signal).
-            '''
-            if filtered:
-                # suscribe to EMG notifications (not needed for raw signals)
+            elif emg_mode == EMGMode.SMOOTHED:
+                # subscribe to notifications of the "hidden" (not listed in the myohw_services enum
+                # of the official BLE specification from Thalmic Labs) EMG characteristic
                 self.backend.write_attr(0x28, b'\x01\x00')
-                # set EMG and IMU, payload size = 3, EMG on, IMU on, classifier on
-                self.backend.write_attr(0x19, b'\x01\x03\x01\x01\x01')
-            # enable battery notifications
-            self.backend.write_attr(0x12, b'\x01\x10')
+
+            # Activate EMG, IMU and classifier notifications. Note that sending a 0x01 for the EMG
+            # mode (not listed on the myohw_emg_mode_t struct of the Myo BLE specification) will
+            # enable the transmission of a stream of low-pass filtered EMG signals from the eight
+            # sensor pods of the Myo armband (the "hidden" mode mentioned above).
+            # Instead of getting raw EMG signals, we get rectified and smoothed signals, a measure
+            # of the amplitude of the EMG (which is useful as a measure of muscle strength, but is
+            # not as useful as a truly raw signal).
+            # command breakdown: set EMG and IMU, payload size = 3, EMG mode, IMU on, classifier on
+            self.backend.write_attr(0x19, b'\x01\x03' + bytes([emg_mode]) + b'\x01\x01')
 
         # add data handlers
         def handle_data(attr, pay):

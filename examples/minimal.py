@@ -6,7 +6,7 @@
 #
 
 import argparse
-from myo_raw import MyoRaw, DataCategory
+from myo_raw import MyoRaw, DataCategory, EMGMode
 
 
 def emg_handler(emg, moving):
@@ -24,7 +24,9 @@ group = parser.add_mutually_exclusive_group()
 group.add_argument('--tty', default=None, help='The Myo dongle device (autodetected if omitted)')
 group.add_argument('--native', default=False, action='store_true', help='Use a native Bluetooth stack')
 parser.add_argument('--mac', default=None, help='The Myo MAC address (arbitrarily detected if omitted)')
-parser.add_argument('--filtered', default=False, action='store_true', help='Get filtered EMG data')
+modes = ', '.join([str(item.value) + ': ' + item.name for item in EMGMode])
+parser.add_argument('--emg_mode', type=int, default=EMGMode.RAW, choices=[m.value for m in EMGMode],
+        help='Choose the EMG receiving mode ({0} - default: %(default)s)'.format(modes))
 args = parser.parse_args()
 
 # setup the BLED112 dongle or a native Bluetooth stack with bluepy
@@ -33,8 +35,8 @@ myo = MyoRaw(args.tty, args.native)
 myo.add_handler(DataCategory.EMG, emg_handler)
 myo.add_handler(DataCategory.IMU, imu_handler)
 myo.add_handler(DataCategory.BATTERY, battery_handler)
-# connect to a Myo device and set whether the EMG data shall be filtered or not
-myo.connect(args.mac, args.filtered)
+# connect to a Myo device and set the data mode of the EMG data
+myo.connect(args.mac, args.emg_mode)
 # disable sleep to avoid disconnects while retrieving data
 myo.set_sleep_mode(1)
 # vibrate and change colors (green logo, blue bar) to signalise a successfull setup

@@ -12,7 +12,7 @@ import time
 from datetime import datetime
 from pathlib import Path
 
-from myo_raw import MyoRaw, DataCategory
+from myo_raw import MyoRaw, DataCategory, EMGMode
 
 emg_header = ['timestamp', 'emg1', 'emg2', 'emg3', 'emg4', 'emg5',
               'emg6', 'emg7', 'emg8', 'moving']
@@ -45,8 +45,10 @@ if __name__ == '__main__':
     group.add_argument('--native', default=False, action='store_true',
                         help='Use a native Bluetooth stack')
     parser.add_argument('--mac', default=None, help='The Myo device')
-    parser.add_argument('--raw', default=False, action='store_true',
-                        help='Switch between filtered or raw EMG data')
+    modes = ', '.join([str(item.value) + ': ' + item.name for item in EMGMode])
+    parser.add_argument('--emg_mode', type=int, default=EMGMode.SMOOTHED,
+                        choices=[m.value for m in EMGMode],
+                        help='Choose the EMG mode ({0})'.format(modes))
     parser.add_argument('-o', '--outdir', metavar='path', default='./',
                         help='Directory to write result files.')
     args = parser.parse_args()
@@ -69,7 +71,7 @@ if __name__ == '__main__':
     m = MyoRaw(args.tty, args.native)
     m.add_handler(DataCategory.EMG, lambda *args: write_data(emg_writer, args))
     m.add_handler(DataCategory.IMU, lambda *args: write_data(imu_writer, args))
-    m.connect(args.mac, not args.raw)
+    m.connect(args.mac, args.emg_mode)
 
     # Enable never sleep mode.
     m.set_sleep_mode(1)

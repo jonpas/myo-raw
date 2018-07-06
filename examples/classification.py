@@ -9,7 +9,7 @@ from collections import Counter, deque
 import sys
 import struct
 import numpy as np
-from myo_raw import MyoRaw, DataCategory
+from myo_raw import MyoRaw, DataCategory, EMGMode
 try:
     from sklearn import neighbors, svm
     HAVE_SK = True
@@ -120,7 +120,7 @@ def classify(m):
 
     hnd = EMGHandler(m)
     m.add_handler(DataCategory.EMG, hnd)
-    m.connect(filtered=True)
+    m.connect(emg_mode=EMGMode.SMOOTHED)
 
     while True:
         m.run()
@@ -182,7 +182,7 @@ def detect(m):
             subprocess.call(['xte', 'key Page_Up'])
 
     m.add_raw_pose_handler(page)
-    m.connect()
+    m.connect(emg_mode=EMGMode.SMOOTHED)
     while True:
         m.run()
 
