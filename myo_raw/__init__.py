@@ -97,14 +97,14 @@ class MyoRaw(object):
         if version < (1, 0, 0, 0):
             # don't know what these do; Myo Connect sends them, though we get data fine without them
             self.backend.write_attr(0x19, b'\x01\x02\x00\x00')
-            # Subscribe for notifications from 4 EMG data channels
+            # subscribe to notifications of the four official EMG characteristics
             self.backend.write_attr(0x2f, b'\x01\x00')
             self.backend.write_attr(0x2c, b'\x01\x00')
             self.backend.write_attr(0x32, b'\x01\x00')
             self.backend.write_attr(0x35, b'\x01\x00')
-            # suscribe to EMG notifications to enable EMG data
+            # subscribe to notifications of the "hidden" EMG characteristics
             self.backend.write_attr(0x28, b'\x01\x00')
-            # suscribe to IMU notifications to enable IMU data
+            # subscribe to notifications of the IMU characteristic
             self.backend.write_attr(0x1d, b'\x01\x00')
 
             # Sampling rate of the underlying EMG sensor, capped to 1000. If it's less than 1000,
@@ -120,17 +120,19 @@ class MyoRaw(object):
             data = struct.pack('<4BH5B', 2, 9, 2, 1, f_s, emg_smooth, f_s // emg_hz, imu_hz, 0, 0)
             self.backend.write_attr(0x19, data)
         else:
+            # print device name and current battery level
             print('device name: {}'.format(self.get_name()))
             print('battery level: {} %'.format(self.get_battery_level()))
 
-            # suscribe to IMU notifications to enable IMU data
+            # subscribe to notifications of the IMU characteristic
             self.backend.write_attr(0x1d, b'\x01\x00')
-            # suscribe to classifier indications to enable on/off arm notifications
+            # subscribe to notifications (on/off arm notifications) of the classifier characteristic
             self.backend.write_attr(0x24, b'\x02\x00')
-            # enable battery notifications
+            # subscribe to notifications of the battery characteristic
             self.backend.write_attr(0x12, b'\x01\x10')
-            # enable EMG notifications
+            # subscribe to notifications of the EMG characteristic(s)
             if emg_mode in [EMGMode.RAW, EMGMode.RAW_FILTERED]:
+                # subscribe to notifications of the four official EMG characteristics
                 self.backend.write_attr(0x2c, b'\x01\x00')  # Suscribe to EmgData0Characteristic
                 self.backend.write_attr(0x2f, b'\x01\x00')  # Suscribe to EmgData1Characteristic
                 self.backend.write_attr(0x32, b'\x01\x00')  # Suscribe to EmgData2Characteristic
@@ -155,19 +157,17 @@ class MyoRaw(object):
             if attr == 0x27:
                 # Unpack a 17 byte array, first 16 are 8 unsigned shorts, last one an unsigned char
                 vals = struct.unpack('<8HB', pay)
-                # not entirely sure what the last byte is, but it's a bitmask that
-                # seems to indicate which sensors think they're being moved around or
-                # something
+                # not entirely sure what the last byte is, but it's a bitmask that seems to indicate
+                # which sensors think they're being moved around or something
                 emg = vals[:8]
                 moving = vals[8]
                 self._call_handlers(DataCategory.EMG, emg, moving)
             # Read notification handles corresponding to the for EMG characteristics
             elif attr == 0x2b or attr == 0x2e or attr == 0x31 or attr == 0x34:
-                '''According to http://developerblog.myo.com/myocraft-emg-in-the-bluetooth-protocol/
-                each characteristic sends two secuential readings in each update,
-                so the received payload is split in two samples. According to the
-                Myo BLE specification, the data type of the EMG samples is int8_t.
-                '''
+                # According to http://developerblog.myo.com/myocraft-emg-in-the-bluetooth-protocol/
+                # each characteristic sends two sequential readings in each update, so the received
+                # payload is split in two samples. According to the Myo BLE specification, the data
+                # type of the EMG samples is int8_t.
                 emg1 = struct.unpack('<8b', pay[:8])
                 emg2 = struct.unpack('<8b', pay[8:])
                 self._call_handlers(DataCategory.EMG, emg1, 0)
@@ -181,8 +181,7 @@ class MyoRaw(object):
                 self._call_handlers(DataCategory.IMU, quat, acc, gyro)
             # Read classifier characteristic handle
             elif attr == 0x23:
-                # note that older versions of the Myo send three bytes
-                # whereas newer ones send six bytes
+                # note that older Myo versions send three bytes whereas newer ones send six bytes
                 typ, val, xdir = struct.unpack('<3B', pay[:3])
 
                 if typ == 1:  # on arm
@@ -198,6 +197,7 @@ class MyoRaw(object):
             else:
                 print('data with unknown attr: %02X %s' % (attr, pay))
 
+        # wrap the handle_data function to be able to process BLED112 packets
         def wrapped_handle_data(packet):
             if (packet.cls, packet.cmd) != (4, 5):
                 return
@@ -205,6 +205,7 @@ class MyoRaw(object):
             pay = packet.payload[5:]
             handle_data(attr, pay)
 
+        # add the right data handling function for the chosen backend
         self.backend.add_handler(handle_data if self.native else wrapped_handle_data)
 
     def disconnect(self):
