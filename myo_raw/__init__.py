@@ -126,7 +126,7 @@ class MyoRaw(object):
 
             # subscribe to notifications of the IMU characteristic
             self.backend.write_attr(0x1d, b'\x01\x00')
-            # subscribe to notifications (on/off arm notifications) of the classifier characteristic
+            # subscribe to indications of the classifier (arm on/off, pose, etc.) characteristic
             self.backend.write_attr(0x24, b'\x02\x00')
             # subscribe to notifications of the battery characteristic
             self.backend.write_attr(0x12, b'\x01\x10')
