@@ -45,6 +45,7 @@ class DataCategory(enum.Enum):
     '''Categories of data available from the Myo armband'''
     ARM, BATTERY, EMG, IMU, POSE = range(5)
 
+
 class EMGMode(enum.IntEnum):
     '''Modes of EMG data (sampling rate and applied filters)'''
     OFF = 0x00
@@ -53,15 +54,43 @@ class EMGMode(enum.IntEnum):
     RAW = 0x03
 
 
+class IMUMode(enum.IntEnum):
+    '''Modes of IMU data'''
+    OFF = 0x00
+    ON = 0x01
+    EVENTS = 0x02
+    ALL = 0x03
+    RAW = 0x04
+
+
 class MyoRaw(object):
     '''Implements the Myo-specific communication protocol.'''
 
-    def __init__(self, tty=None, native=False):
+    def __init__(self, tty=None, native=False, mac=None):
+        '''
+        Scan and connect to a Myo armband using either the BLED112 or a native Bluetooth adapter
+
+        :param tty: the device name of a Bluegiga BLED112 adapter
+        :param native: if true try to use a native Bluetooth adapter (Linux only)
+        :param mac: the MAC address of the Myo (randomly chosen if None)
+        '''
         if native and not NATIVE_SUPPORT:
             raise ImportError('bluepy is required to use a native Bluetooth adapter')
         self.backend = Native() if native else BLED112(tty)
         self.native = native
         self.handlers = {data_category:[] for data_category in DataCategory}
+
+        # scan and connect to a Myo armband and extract the firmware version
+        mac = self.backend.scan('4248124a7f2c4847b9de04a9010006d5', mac)
+        print('connecting to the Myo armband: {0}'.format(mac))
+        self.backend.connect(mac)
+        firmware = self.backend.read_attr(0x17)
+        self.version = struct.unpack('<HHHH', firmware)
+
+        # print device name, current battery level and firmware version
+        print('device name: {}'.format(self.get_name()))
+        print('battery level: {} %'.format(self.get_battery_level()))
+        print('firmware version: %d.%d.%d.%d' % self.version)
 
     def run(self, timeout=None):
         '''
@@ -71,30 +100,23 @@ class MyoRaw(object):
         '''
         self.backend.recv_packet(timeout)
 
-    def connect(self, mac=None, emg_mode=EMGMode.RAW):
+    def subscribe(self, emg_mode=EMGMode.RAW, imu_mode=IMUMode.ON, classifier=True, battery=True):
         '''
-        Connect to a Myo armband and enable streaming of available data
+        Subscribe to chosen data channels. Note that the parameters have no influcence when using a
+        Myo with version less than 1.0.0.0. In this case only EMG and IMU data are enabled.
 
-        :param mac: the MAC address of the Myo (randomly chosen if None)
         :param emg_mode: the mode of the EMG data stream (sampling rate and filters)
 
           :0: deactivate EMG data
           :1: 50 Hz sampling rate, smoothed and rectified signals ("hidden" EMG mode)
           :2: 200 Hz sampling rate, power line noise filters (50 and 60 Hz notch filters)
           :3: 200 Hz sampling rate, raw data
+        :param imu_mode: the mode of the IMU data stream
+        :param classifier: whether to enable the on-board classifier indications or not
+        :param battery: whether to enable battery notifications or not
         '''
-        # scan for a Myo armband
-        mac = self.backend.scan('4248124a7f2c4847b9de04a9010006d5', mac)
-        print('connecting to the Myo armband: {0}'.format(mac))
-        # connect to a Myo armband
-        self.backend.connect(mac)
 
-        # get firmware version
-        firmware = self.backend.read_attr(0x17)
-        version = struct.unpack('<HHHH', firmware)
-        print('firmware version: %d.%d.%d.%d' % version)
-
-        if version < (1, 0, 0, 0):
+        if self.version < (1, 0, 0, 0):
             # don't know what these do; Myo Connect sends them, though we get data fine without them
             self.backend.write_attr(0x19, b'\x01\x02\x00\x00')
             # subscribe to notifications of the four official EMG characteristics
@@ -120,16 +142,15 @@ class MyoRaw(object):
             data = struct.pack('<4BH5B', 2, 9, 2, 1, f_s, emg_smooth, f_s // emg_hz, imu_hz, 0, 0)
             self.backend.write_attr(0x19, data)
         else:
-            # print device name and current battery level
-            print('device name: {}'.format(self.get_name()))
-            print('battery level: {} %'.format(self.get_battery_level()))
-
             # subscribe to notifications of the IMU characteristic
-            self.backend.write_attr(0x1d, b'\x01\x00')
+            if imu_mode:
+                self.backend.write_attr(0x1d, b'\x01\x00')
             # subscribe to indications of the classifier (arm on/off, pose, etc.) characteristic
-            self.backend.write_attr(0x24, b'\x02\x00')
+            if classifier:
+                self.backend.write_attr(0x24, b'\x02\x00')
             # subscribe to notifications of the battery characteristic
-            self.backend.write_attr(0x12, b'\x01\x10')
+            if battery:
+                self.backend.write_attr(0x12, b'\x01\x10')
             # subscribe to notifications of the EMG characteristic(s)
             if emg_mode in [EMGMode.RAW, EMGMode.RAW_FILTERED]:
                 # subscribe to notifications of the four official EMG characteristics
@@ -149,8 +170,8 @@ class MyoRaw(object):
             # Instead of getting raw EMG signals, we get rectified and smoothed signals, a measure
             # of the amplitude of the EMG (which is useful as a measure of muscle strength, but is
             # not as useful as a truly raw signal).
-            # command breakdown: set EMG and IMU, payload size = 3, EMG mode, IMU on, classifier on
-            self.backend.write_attr(0x19, b'\x01\x03' + bytes([emg_mode]) + b'\x01\x01')
+            # command breakdown: set EMG and IMU, payload size = 3, EMG, IMU and classifier modes
+            self.backend.write_attr(0x19, b'\x01\x03' + bytes([emg_mode, imu_mode, classifier]))
 
         # add data handlers
         def handle_data(attr, pay):

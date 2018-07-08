@@ -68,10 +68,10 @@ if __name__ == '__main__':
                             quoting=csv.QUOTE_MINIMAL)
     imu_writer.writerow(imu_header)
 
-    m = MyoRaw(args.tty, args.native)
+    m = MyoRaw(args.tty, args.native, args.mac)
     m.add_handler(DataCategory.EMG, lambda *args: write_data(emg_writer, args))
     m.add_handler(DataCategory.IMU, lambda *args: write_data(imu_writer, args))
-    m.connect(args.mac, args.emg_mode)
+    m.subscribe(args.emg_mode)
 
     # Enable never sleep mode.
     m.set_sleep_mode(1)

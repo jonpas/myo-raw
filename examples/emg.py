@@ -64,7 +64,7 @@ def proc_battery(battery_level):
 m = MyoRaw(sys.argv[1] if len(sys.argv) >= 2 else None)
 m.add_handler(DataCategory.EMG, proc_emg)
 m.add_handler(DataCategory.BATTERY, proc_battery)
-m.connect()
+m.subscribe()
 
 m.add_handler(DataCategory.ARM, lambda arm, xdir: print('arm', arm, 'xdir', xdir))
 m.add_handler(DataCategory.POSE, lambda p: print('pose', p))

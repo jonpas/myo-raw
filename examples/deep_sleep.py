@@ -14,6 +14,5 @@ group.add_argument('--native', default=False, action='store_true', help='Use a n
 parser.add_argument('--mac', default=None, help='The Myo MAC address (arbitrarily detected if omitted)')
 args = parser.parse_args()
 
-myo = MyoRaw(args.tty, args.native)
-myo.connect(args.mac)
+myo = MyoRaw(args.tty, args.native, args.mac)
 myo.deep_sleep()

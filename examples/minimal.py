@@ -29,14 +29,14 @@ parser.add_argument('--emg_mode', type=int, default=EMGMode.RAW, choices=[m.valu
         help='Choose the EMG receiving mode ({0} - default: %(default)s)'.format(modes))
 args = parser.parse_args()
 
-# setup the BLED112 dongle or a native Bluetooth stack with bluepy
-myo = MyoRaw(args.tty, args.native)
+# setup the BLED112 dongle or a native Bluetooth stack with bluepy and connect to a Myo armband
+myo = MyoRaw(args.tty, args.native, args.mac)
 # add handlers to process EMG, IMU and battery level data
 myo.add_handler(DataCategory.EMG, emg_handler)
 myo.add_handler(DataCategory.IMU, imu_handler)
 myo.add_handler(DataCategory.BATTERY, battery_handler)
-# connect to a Myo device and set the data mode of the EMG data
-myo.connect(args.mac, args.emg_mode)
+# subscribe to all data services
+myo.subscribe(args.emg_mode)
 # disable sleep to avoid disconnects while retrieving data
 myo.set_sleep_mode(1)
 # vibrate and change colors (green logo, blue bar) to signalise a successfull setup

@@ -120,7 +120,7 @@ def classify(m):
 
     hnd = EMGHandler(m)
     m.add_handler(DataCategory.EMG, hnd)
-    m.connect(emg_mode=EMGMode.SMOOTHED)
+    m.subscribe(emg_mode=EMGMode.SMOOTHED)
 
     while True:
         m.run()
@@ -182,7 +182,7 @@ def detect(m):
             subprocess.call(['xte', 'key Page_Up'])
 
     m.add_raw_pose_handler(page)
-    m.connect(emg_mode=EMGMode.SMOOTHED)
+    m.subscribe(emg_mode=EMGMode.SMOOTHED)
     while True:
         m.run()
 
