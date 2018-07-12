@@ -177,11 +177,10 @@ class MyoRaw(object):
         def handle_data(attr, pay):
             if attr == 0x27:
                 # Unpack a 17 byte array, first 16 are 8 unsigned shorts, last one an unsigned char
-                vals = struct.unpack('<8HB', pay)
                 # not entirely sure what the last byte is, but it's a bitmask that seems to indicate
                 # which sensors think they're being moved around or something
-                emg = vals[:8]
-                moving = vals[8]
+                emg = struct.unpack('<8H', pay[:16])
+                moving = pay[16]
                 self._call_handlers(DataCategory.EMG, emg, moving, None)
             # Read notification handles corresponding to the for EMG characteristics
             elif attr == 0x2b or attr == 0x2e or attr == 0x31 or attr == 0x34:
@@ -196,16 +195,14 @@ class MyoRaw(object):
                 self._call_handlers(DataCategory.EMG, emg2, None, characteristic_num)
             # Read IMU characteristic handle
             elif attr == 0x1c:
-                vals = struct.unpack('<10h', pay)
-                quat = vals[:4]
-                acc = vals[4:7]
-                gyro = vals[7:10]
+                quat = struct.unpack('<4h', pay[:8])
+                acc = struct.unpack('<3h', pay[8:14])
+                gyro = struct.unpack('<3h', pay[14:20])
                 self._call_handlers(DataCategory.IMU, quat, acc, gyro)
             # Read classifier characteristic handle
             elif attr == 0x23:
                 # note that older Myo versions send three bytes whereas newer ones send six bytes
                 typ, val, xdir = struct.unpack('<3B', pay[:3])
-
                 if typ == 1:  # on arm
                     self._call_handlers(DataCategory.ARM, Arm(val), XDirection(xdir))
                 elif typ == 2:  # removed from arm
