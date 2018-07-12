@@ -9,8 +9,8 @@ import argparse
 from myo_raw import MyoRaw, DataCategory, EMGMode
 
 
-def emg_handler(emg, moving):
-    print('emg:', emg, moving)
+def emg_handler(emg, moving, characteristic_num):
+    print('emg:', emg, moving, characteristic_num)
 
 def imu_handler(quat, acc, gyro,):
     print('imu:', quat, acc, gyro)

@@ -42,7 +42,7 @@ if HAVE_PYGAME:
         pygame.display.flip()
         last_vals = vals
 
-def proc_emg(emg, moving, times=[]):
+def proc_emg(emg, moving, characteristic_num, times=[]):
     if HAVE_PYGAME:
         # update pygame display
         plot(scr, [e / 500. for e in emg])

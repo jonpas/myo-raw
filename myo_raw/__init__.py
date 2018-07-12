@@ -182,7 +182,7 @@ class MyoRaw(object):
                 # which sensors think they're being moved around or something
                 emg = vals[:8]
                 moving = vals[8]
-                self._call_handlers(DataCategory.EMG, emg, moving)
+                self._call_handlers(DataCategory.EMG, emg, moving, None)
             # Read notification handles corresponding to the for EMG characteristics
             elif attr == 0x2b or attr == 0x2e or attr == 0x31 or attr == 0x34:
                 # According to http://developerblog.myo.com/myocraft-emg-in-the-bluetooth-protocol/
@@ -191,8 +191,9 @@ class MyoRaw(object):
                 # type of the EMG samples is int8_t.
                 emg1 = struct.unpack('<8b', pay[:8])
                 emg2 = struct.unpack('<8b', pay[8:])
-                self._call_handlers(DataCategory.EMG, emg1, 0)
-                self._call_handlers(DataCategory.EMG, emg2, 0)
+                characteristic_num = int((attr - 1) / 3 - 14)
+                self._call_handlers(DataCategory.EMG, emg1, None, characteristic_num)
+                self._call_handlers(DataCategory.EMG, emg2, None, characteristic_num)
             # Read IMU characteristic handle
             elif attr == 0x1c:
                 vals = struct.unpack('<10h', pay)

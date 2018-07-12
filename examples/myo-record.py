@@ -15,7 +15,7 @@ from pathlib import Path
 from myo_raw import MyoRaw, DataCategory, EMGMode
 
 emg_header = ['timestamp', 'emg1', 'emg2', 'emg3', 'emg4', 'emg5',
-              'emg6', 'emg7', 'emg8', 'moving']
+              'emg6', 'emg7', 'emg8', 'moving', 'characteristic_num']
 
 imu_header = ['timestamp', 'ori_w', 'ori_x', 'ori_y', 'ori_z', 'accel_1',
               'accel_2', 'accel_3', 'gyro_1', 'gyro_2', 'gyro_3']
