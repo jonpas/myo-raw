@@ -1,5 +1,6 @@
 *~
 *.pyc
 *.dat
+*.csv
 *.egg-info
 /docs/_build
