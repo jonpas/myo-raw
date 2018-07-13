@@ -10,6 +10,7 @@
 
 import enum
 import struct
+import time
 from .bled112 import BLED112
 try:
     from .native import Native
@@ -175,13 +176,14 @@ class MyoRaw(object):
 
         # add data handlers
         def handle_data(attr, pay):
+            cur_time = time.time()
             if attr == 0x27:
                 # Unpack a 17 byte array, first 16 are 8 unsigned shorts, last one an unsigned char
                 # not entirely sure what the last byte is, but it's a bitmask that seems to indicate
                 # which sensors think they're being moved around or something
                 emg = struct.unpack('<8H', pay[:16])
                 moving = pay[16]
-                self._call_handlers(DataCategory.EMG, emg, moving, None)
+                self._call_handlers(DataCategory.EMG, cur_time, emg, moving, None)
             # Read notification handles corresponding to the for EMG characteristics
             elif attr == 0x2b or attr == 0x2e or attr == 0x31 or attr == 0x34:
                 # According to http://developerblog.myo.com/myocraft-emg-in-the-bluetooth-protocol/
@@ -191,28 +193,28 @@ class MyoRaw(object):
                 emg1 = struct.unpack('<8b', pay[:8])
                 emg2 = struct.unpack('<8b', pay[8:])
                 characteristic_num = int((attr - 1) / 3 - 14)
-                self._call_handlers(DataCategory.EMG, emg1, None, characteristic_num)
-                self._call_handlers(DataCategory.EMG, emg2, None, characteristic_num)
+                self._call_handlers(DataCategory.EMG, cur_time, emg1, None, characteristic_num)
+                self._call_handlers(DataCategory.EMG, cur_time, emg2, None, characteristic_num)
             # Read IMU characteristic handle
             elif attr == 0x1c:
                 quat = struct.unpack('<4h', pay[:8])
                 acc = struct.unpack('<3h', pay[8:14])
                 gyro = struct.unpack('<3h', pay[14:20])
-                self._call_handlers(DataCategory.IMU, quat, acc, gyro)
+                self._call_handlers(DataCategory.IMU, cur_time, quat, acc, gyro)
             # Read classifier characteristic handle
             elif attr == 0x23:
                 # note that older Myo versions send three bytes whereas newer ones send six bytes
                 typ, val, xdir = struct.unpack('<3B', pay[:3])
                 if typ == 1:  # on arm
-                    self._call_handlers(DataCategory.ARM, Arm(val), XDirection(xdir))
+                    self._call_handlers(DataCategory.ARM, cur_time, Arm(val), XDirection(xdir))
                 elif typ == 2:  # removed from arm
-                    self._call_handlers(DataCategory.ARM, Arm.UNKNOWN, XDirection.UNKNOWN)
+                    self._call_handlers(DataCategory.ARM, cur_time, Arm.UNKNOWN, XDirection.UNKNOWN)
                 elif typ == 3:  # pose
-                    self._call_handlers(DataCategory.POSE, Pose(val))
+                    self._call_handlers(DataCategory.POSE, cur_time, Pose(val))
             # Read battery characteristic handle
             elif attr == 0x11:
                 battery_level = ord(pay)
-                self._call_handlers(DataCategory.BATTERY, battery_level)
+                self._call_handlers(DataCategory.BATTERY, cur_time, battery_level)
             else:
                 print('data with unknown attr: %02X %s' % (attr, pay))
 

@@ -83,7 +83,7 @@ class Myo(MyoRaw):
         self.last_pose = None
         self.pose_handlers = []
 
-    def emg_handler(self, emg, moving, characteristic_num):
+    def emg_handler(self, timestamp, emg, moving, characteristic_num):
         y = self.cls.classify(emg)
         self.history_cnt[self.history[0]] -= 1
         self.history_cnt[y] += 1
@@ -106,7 +106,7 @@ class EMGHandler(object):
         self.m = m
         self.emg = (0,) * 8
 
-    def __call__(self, emg, moving, characteristic_num):
+    def __call__(self, timestamp, emg, moving, characteristic_num):
         self.emg = emg
         if self.recording >= 0:
             self.m.cls.store_data(self.recording, emg)

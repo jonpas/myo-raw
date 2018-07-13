@@ -9,14 +9,14 @@ import argparse
 from myo_raw import MyoRaw, DataCategory, EMGMode
 
 
-def emg_handler(emg, moving, characteristic_num):
-    print('emg:', emg, moving, characteristic_num)
+def emg_handler(timestamp, emg, moving, characteristic_num):
+    print('emg:', timestamp, emg, moving, characteristic_num)
 
-def imu_handler(quat, acc, gyro,):
-    print('imu:', quat, acc, gyro)
+def imu_handler(timestamp, quat, acc, gyro,):
+    print('imu:', timestamp, quat, acc, gyro)
 
-def battery_handler(battery_level):
-    print('battery level:', battery_level)
+def battery_handler(timestamp, battery_level):
+    print('battery level:', timestamp, battery_level)
 
 
 parser = argparse.ArgumentParser()

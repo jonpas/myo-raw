@@ -31,10 +31,7 @@ def flatten(l):
 
 
 def write_data(writer, data):
-    # Can Myo timestamp the data?
-    now = datetime.fromtimestamp(time.time()).isoformat()
-    row = list(flatten([now, data]))
-    writer.writerow(row)
+    writer.writerow(flatten(data))
 
 
 if __name__ == '__main__':

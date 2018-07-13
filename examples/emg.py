@@ -42,7 +42,7 @@ if HAVE_PYGAME:
         pygame.display.flip()
         last_vals = vals
 
-def proc_emg(emg, moving, characteristic_num, times=[]):
+def proc_emg(timestamp, emg, moving, characteristic_num, times=[]):
     if HAVE_PYGAME:
         # update pygame display
         plot(scr, [e / 500. for e in emg])
@@ -54,7 +54,7 @@ def proc_emg(emg, moving, characteristic_num, times=[]):
         # print((len(times) - 1) / (times[-1] - times[0]))
         times.pop(0)
 
-def proc_battery(battery_level):
+def proc_battery(timestamp, battery_level):
     print("Battery level: %d" % battery_level)
     if battery_level < 5:
         m.set_leds([255, 0, 0], [255, 0, 0])
