@@ -94,6 +94,9 @@ class BLED112(object):
     def add_handler(self, h):
         self.handlers.append(h)
 
+    def clear_handler(self):
+        self.handlers.clear()
+
     def remove_handler(self, h):
         try:
             self.handlers.remove(h)

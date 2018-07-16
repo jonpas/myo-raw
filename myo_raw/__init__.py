@@ -93,6 +93,12 @@ class MyoRaw(object):
         print('battery level: {} %'.format(self.get_battery_level()))
         print('firmware version: %d.%d.%d.%d' % self.version)
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exception_type, exception_value, traceback):
+        self.disconnect()
+
     def run(self, timeout=None):
         '''
         Block until a packet is received or until the given timeout has elapsed
@@ -233,6 +239,7 @@ class MyoRaw(object):
         '''
         Disconnect from the Myo armband
         '''
+        self.backend.clear_handler()
         self.backend.disconnect()
 
     def set_sleep_mode(self, mode):

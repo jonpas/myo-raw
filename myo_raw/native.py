@@ -48,6 +48,9 @@ class Native(btle.Peripheral):
         except ValueError:
             pass
 
+    def clear_handler(self):
+        self.delegate.handlers.clear()
+
     def recv_packet(self, timeout=None):
         self.waitForNotifications(timeout)
 
