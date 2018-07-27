@@ -64,7 +64,7 @@ class IMUMode(enum.IntEnum):
     RAW = 0x04
 
 
-class MyoRaw(object):
+class MyoRaw():
     '''Implements the Myo-specific communication protocol.'''
 
     def __init__(self, tty=None, native=False, mac=None):

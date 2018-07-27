@@ -14,7 +14,7 @@ import re
 import serial
 from serial.tools import list_ports
 
-class Packet(object):
+class Packet():
     '''BLED112 packet representation'''
 
     def __init__(self, ords):
@@ -29,7 +29,7 @@ class Packet(object):
              ' '.join('%02X' % b for b in list(self.payload)))
 
 
-class BLED112(object):
+class BLED112():
     '''Non-Myo-specific Bluetooth backend using the provided BLED112 dongle with pyserial.'''
 
     def __init__(self, tty):
