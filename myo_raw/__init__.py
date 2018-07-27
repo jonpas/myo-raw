@@ -78,7 +78,6 @@ class MyoRaw():
         if native and not NATIVE_SUPPORT:
             raise ImportError('bluepy is required to use a native Bluetooth adapter')
         self.backend = Native() if native else BLED112(tty)
-        self.native = native
         self.handlers = {data_category:[] for data_category in DataCategory}
 
         # scan and connect to a Myo armband and extract the firmware version
@@ -224,16 +223,8 @@ class MyoRaw():
             else:
                 print('data with unknown attr: %02X %s' % (attr, pay))
 
-        # wrap the handle_data function to be able to process BLED112 packets
-        def wrapped_handle_data(packet):
-            if (packet.cls, packet.cmd) != (4, 5):
-                return
-            _, attr, _ = struct.unpack('<BHB', packet.payload[:4])
-            pay = packet.payload[5:]
-            handle_data(attr, pay)
-
         # set the right data handling function for the chosen backend
-        self.backend.handler = handle_data if self.native else wrapped_handle_data
+        self.backend.handler = handle_data
 
     def disconnect(self):
         '''

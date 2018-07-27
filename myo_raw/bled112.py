@@ -42,7 +42,7 @@ class BLED112():
         self.buf = []
         self.lock = threading.Lock()
         self._internal_handler = None
-        self.handler = None
+        self._external_handler = None
 
     @staticmethod
     def _detect_tty():
@@ -88,11 +88,26 @@ class BLED112():
             return p
         return None
 
+    @property
+    def handler(self):
+        return self._external_handler
+
+    @handler.setter
+    def handler(self, func):
+        # wrap the provided handler function to be able to process BLED112 packets
+        def wrapped_handle_data(packet):
+            if (packet.cls, packet.cmd) != (4, 5):
+                return
+            _, attr, _ = struct.unpack('<BHB', packet.payload[:4])
+            pay = packet.payload[5:]
+            func(attr, pay)
+        self._external_handler = wrapped_handle_data if callable(func) else None
+
     def _handle_event(self, p):
         if self._internal_handler:
             self._internal_handler(p)
-        if self.handler:
-            self.handler(p)
+        if self._external_handler:
+            self._external_handler(p)
 
     def _wait_event(self, cls, cmd):
         res = [None]

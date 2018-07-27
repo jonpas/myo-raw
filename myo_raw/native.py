@@ -44,8 +44,8 @@ class Native(btle.Peripheral):
         return self.delegate.handler
 
     @handler.setter
-    def handler(self, handler):
-        self.delegate.handler = handler
+    def handler(self, func):
+        self.delegate.handler = func if callable(func) else None
 
     def recv_packet(self, timeout=None):
         self.waitForNotifications(timeout)
