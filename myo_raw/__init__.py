@@ -191,7 +191,7 @@ class MyoRaw():
                 moving = pay[16]
                 self._call_handlers(DataCategory.EMG, cur_time, emg, moving, None)
             # Read notification handles corresponding to the for EMG characteristics
-            elif attr == 0x2b or attr == 0x2e or attr == 0x31 or attr == 0x34:
+            elif attr in (0x2b, 0x2e, 0x31, 0x34):
                 # According to http://developerblog.myo.com/myocraft-emg-in-the-bluetooth-protocol/
                 # each characteristic sends two sequential readings in each update, so the received
                 # payload is split in two samples. According to the Myo BLE specification, the data
