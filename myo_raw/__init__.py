@@ -232,14 +232,14 @@ class MyoRaw():
             pay = packet.payload[5:]
             handle_data(attr, pay)
 
-        # add the right data handling function for the chosen backend
-        self.backend.add_handler(handle_data if self.native else wrapped_handle_data)
+        # set the right data handling function for the chosen backend
+        self.backend.handler = handle_data if self.native else wrapped_handle_data
 
     def disconnect(self):
         '''
         Disconnect from the Myo armband
         '''
-        self.backend.clear_handler()
+        self.backend.handler = None
         self.backend.disconnect()
 
     def set_sleep_mode(self, mode):

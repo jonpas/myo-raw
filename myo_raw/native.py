@@ -12,11 +12,11 @@ class Delegate(btle.DefaultDelegate):
 
     def __init__(self):
         super().__init__()
-        self.handlers = []
+        self.handler = None
 
     def handleNotification(self, cHandle, data):
-        for handler in self.handlers:
-            handler(cHandle, data)
+        if self.handler:
+            self.handler(cHandle, data)
 
 class Native(btle.Peripheral):
     '''Non-Myo-specific Bluetooth backend based on a bluepy to use standard Bluetooth adapters.'''
@@ -39,17 +39,13 @@ class Native(btle.Peripheral):
                     if target_address is None or target_address.lower() == dev.addr:
                         return dev.addr
 
-    def add_handler(self, handler):
-        self.delegate.handlers.append(handler)
+    @property
+    def handler(self):
+        return self.delegate.handler
 
-    def remove_handler(self, handler):
-        try:
-            self.delegate.handlers.remove(handler)
-        except ValueError:
-            pass
-
-    def clear_handler(self):
-        self.delegate.handlers.clear()
+    @handler.setter
+    def handler(self, handler):
+        self.delegate.handler = handler
 
     def recv_packet(self, timeout=None):
         self.waitForNotifications(timeout)

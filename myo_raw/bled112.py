@@ -41,7 +41,8 @@ class BLED112():
         self.ser = serial.Serial(port=tty, baudrate=9600, dsrdtr=1)
         self.buf = []
         self.lock = threading.Lock()
-        self.handlers = []
+        self._internal_handler = None
+        self.handler = None
 
     @staticmethod
     def _detect_tty():
@@ -88,20 +89,10 @@ class BLED112():
         return None
 
     def _handle_event(self, p):
-        for h in self.handlers:
-            h(p)
-
-    def add_handler(self, h):
-        self.handlers.append(h)
-
-    def clear_handler(self):
-        self.handlers.clear()
-
-    def remove_handler(self, h):
-        try:
-            self.handlers.remove(h)
-        except ValueError:
-            pass
+        if self._internal_handler:
+            self._internal_handler(p)
+        if self.handler:
+            self.handler(p)
 
     def _wait_event(self, cls, cmd):
         res = [None]
@@ -109,10 +100,10 @@ class BLED112():
         def h(p):
             if p.cls == cls and p.cmd == cmd:
                 res[0] = p
-        self.add_handler(h)
+        self._internal_handler = h
         while res[0] is None:
             self.recv_packet()
-        self.remove_handler(h)
+        self._internal_handler = None
         return res[0]
 
     # specific BLE commands
