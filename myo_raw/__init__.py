@@ -117,7 +117,15 @@ class MyoRaw():
           :1: 50 Hz sampling rate, smoothed and rectified signals ("hidden" EMG mode)
           :2: 200 Hz sampling rate, power line noise filters (50 and 60 Hz notch filters)
           :3: 200 Hz sampling rate, raw data
-        :param imu_mode: the mode of the IMU data stream
+
+        :param imu_mode: the mode of the IMU data stream (always 50 Hz sampling rate)
+
+          :0: deactivate IMU data
+          :1: send IMU data (accelerometer, gyroscope and orientation as a quaternion)
+          :2: send motion events (events detected by the IMU)
+          :3: send both, motion events and IMU data
+          :4: send raw (original orientation) IMU data
+
         :param classifier: whether to enable the on-board classifier indications or not
         :param battery: whether to enable battery notifications or not
         '''
@@ -149,7 +157,7 @@ class MyoRaw():
             self.backend.write_attr(0x19, data)
         else:
             # subscribe to notifications of the IMU characteristic
-            if imu_mode:
+            if imu_mode != IMUMode.OFF:
                 self.backend.write_attr(0x1d, b'\x01\x00')
             # subscribe to indications of the classifier (arm on/off, pose, etc.) characteristic
             if classifier:
