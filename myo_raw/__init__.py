@@ -64,6 +64,13 @@ class IMUMode(enum.IntEnum):
     RAW = 0x04
 
 
+class CLFState(enum.IntEnum):
+    '''States of the on-board classifier'''
+    OFF = 0x00
+    ACTIVE = 0x01
+    PASSIVE = 0x02
+
+
 class MyoRaw():
     '''Implements the Myo-specific communication protocol.'''
 
@@ -106,7 +113,7 @@ class MyoRaw():
         '''
         self.backend.recv_packet(timeout)
 
-    def subscribe(self, emg_mode=EMGMode.RAW, imu_mode=IMUMode.ON, classifier=True, battery=True):
+    def subscribe(self, emg_mode=EMGMode.RAW, imu_mode=IMUMode.ON, clf_state=CLFState.ACTIVE, battery=True):
         '''
         Subscribe to chosen data channels. Note that the parameters have no influcence when using a
         Myo with version less than 1.0.0.0. In this case only EMG and IMU data are enabled.
@@ -126,7 +133,12 @@ class MyoRaw():
           :3: send both, motion events and IMU data
           :4: send raw (original orientation) IMU data
 
-        :param classifier: whether to enable the on-board classifier indications or not
+        :param clf_state: the state of the on-board classifier
+
+          :0: deactivate the on-board classifier (disable the sync gesture)
+          :1: activate the on-board classifier and enable the indication to send arm and pose data
+          :2: activate the on-board classifier but disable the indication (sync gesture is enabled)
+
         :param battery: whether to enable battery notifications or not
         '''
 
@@ -160,7 +172,7 @@ class MyoRaw():
             if imu_mode != IMUMode.OFF:
                 self.backend.write_attr(0x1d, b'\x01\x00')
             # subscribe to indications of the classifier (arm on/off, pose, etc.) characteristic
-            if classifier:
+            if clf_state == CLFState.ACTIVE:
                 self.backend.write_attr(0x24, b'\x02\x00')
             # subscribe to notifications of the battery characteristic
             if battery:
@@ -185,7 +197,8 @@ class MyoRaw():
             # of the amplitude of the EMG (which is useful as a measure of muscle strength, but is
             # not as useful as a truly raw signal).
             # command breakdown: set EMG and IMU, payload size = 3, EMG, IMU and classifier modes
-            self.backend.write_attr(0x19, b'\x01\x03' + bytes([emg_mode, imu_mode, classifier]))
+            clf_mode = clf_state != CLFState.OFF
+            self.backend.write_attr(0x19, b'\x01\x03' + bytes([emg_mode, imu_mode, clf_mode]))
 
         # add data handlers
         def handle_data(attr, pay):
