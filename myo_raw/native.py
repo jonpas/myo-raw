@@ -5,7 +5,10 @@
 # Licensed under the MIT license. See the LICENSE file for details.
 #
 
+import logging
 from bluepy import btle
+
+LOG = logging.getLogger(__name__)
 
 class Delegate(btle.DefaultDelegate):
     '''Store handlers to be called from a bluepy Peripheral on receiving notifications'''
@@ -24,18 +27,18 @@ class Native(btle.Peripheral):
     def __init__(self):
         super().__init__()
         self.withDelegate(Delegate())
-        print('using bluepy backend')
+        LOG.debug('using bluepy backend')
 
     @staticmethod
     def scan(target_uuid, target_address=None):
-        print('scanning...')
+        LOG.info('scanning for devices...')
         scanner = btle.Scanner()
         while True:
             devices = scanner.scan(timeout=1)
             for dev in devices:
                 uuid = next(item[2] for item in dev.getScanData() if item[0] == 6)
                 if target_uuid == uuid:
-                    print('found a Bluetooth device (MAC address: {0})'.format(dev.addr))
+                    LOG.debug('found a Bluetooth device (MAC address: %s)', dev.addr)
                     if target_address is None or target_address.lower() == dev.addr:
                         return dev.addr
 

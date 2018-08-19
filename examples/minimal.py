@@ -6,6 +6,7 @@
 #
 
 import argparse
+import logging
 from myo_raw import MyoRaw, DataCategory, EMGMode
 
 
@@ -27,7 +28,10 @@ parser.add_argument('--mac', default=None, help='The Myo MAC address (arbitraril
 modes = ', '.join([str(item.value) + ': ' + item.name for item in EMGMode])
 parser.add_argument('--emg_mode', type=int, default=EMGMode.RAW, choices=[m.value for m in EMGMode],
         help='Choose the EMG receiving mode ({0} - default: %(default)s)'.format(modes))
+parser.add_argument('-v', '--verbose', action='count', default=0, help='Increase verbosity')
 args = parser.parse_args()
+# set logging level to at least logging.INFO
+logging.basicConfig(level=max(2 - args.verbose, 0) * 10)
 
 # setup the BLED112 dongle or a native Bluetooth stack with bluepy and connect to a Myo armband
 myo = MyoRaw(args.tty, args.native, args.mac)

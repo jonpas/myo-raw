@@ -11,8 +11,11 @@ import struct
 import threading
 import time
 import re
+import logging
 import serial
 from serial.tools import list_ports
+
+LOG = logging.getLogger(__name__)
 
 class Packet():
     '''BLED112 packet representation'''
@@ -49,7 +52,7 @@ class BLED112():
         '''Try to find a Bluegiga BLED112 dongle'''
         for port, desc, hwid in list_ports.comports():
             if re.search(r'PID=2458:0*1', hwid):
-                print('using "{0}" at port {1}'.format(desc, port))
+                LOG.debug('using "%s" at port %s', desc, port)
                 return port
         return None
 
@@ -129,14 +132,14 @@ class BLED112():
             self._send_command(3, 0, struct.pack('<B', connection_number))
 
         # start scanning
-        print('scanning...')
+        LOG.info('scanning for devices...')
         self._send_command(6, 2, b'\x01')
         while True:
             packet = self.recv_packet()
             if packet.payload.endswith(bytes.fromhex(target_uuid)):
                 address = list(list(packet.payload[2:8]))
                 address_string = ':'.join(format(item, '02x') for item in reversed(address))
-                print('found a Bluetooth device (MAC address: {0})'.format(address_string))
+                LOG.debug('found a Bluetooth device (MAC address: %s)', address_string)
                 if target_address is None or target_address.lower() == address_string:
                     # stop scanning and return the found mac address
                     self._send_command(6, 4)

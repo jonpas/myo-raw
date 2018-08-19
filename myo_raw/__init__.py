@@ -11,6 +11,7 @@
 import enum
 import struct
 import time
+import logging
 from .bled112 import BLED112
 try:
     from .native import Native
@@ -19,6 +20,7 @@ except ImportError:
 else:
     NATIVE_SUPPORT = True
 
+LOG = logging.getLogger(__name__)
 
 class Arm(enum.Enum):
     UNKNOWN = 0
@@ -89,15 +91,14 @@ class MyoRaw():
 
         # scan and connect to a Myo armband and extract the firmware version
         mac = self.backend.scan('4248124a7f2c4847b9de04a9010006d5', mac)
-        print('connecting to the Myo armband: {0}'.format(mac))
         self.backend.connect(mac)
         firmware = self.backend.read_attr(0x17)
         self.version = struct.unpack('<HHHH', firmware)
 
-        # print device name, current battery level and firmware version
-        print('device name: {}'.format(self.get_name()))
-        print('battery level: {} %'.format(self.get_battery_level()))
-        print('firmware version: %d.%d.%d.%d' % self.version)
+        # log device name, current battery level and firmware version
+        LOG.info('connected to %s (%s)', self.get_name(), mac)
+        LOG.info('battery level: %s %%', self.get_battery_level())
+        LOG.debug('firmware version: %d.%d.%d.%d', *self.version)
 
     def __enter__(self):
         return self
@@ -242,7 +243,7 @@ class MyoRaw():
                 battery_level = ord(pay)
                 self._call_handlers(DataCategory.BATTERY, cur_time, battery_level)
             else:
-                print('data with unknown attr: %02X %s' % (attr, pay))
+                LOG.warning('data with unknown attr: %02X %s', attr, pay)
 
         # set the right data handling function for the chosen backend
         self.backend.handler = handle_data
