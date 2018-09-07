@@ -12,6 +12,7 @@ import enum
 import struct
 import time
 import logging
+from .consumerpool import ConsumerPool
 from .bled112 import BLED112
 try:
     from .native import Native
@@ -87,7 +88,7 @@ class MyoRaw():
         if native and not NATIVE_SUPPORT:
             raise ImportError('bluepy is required to use a native Bluetooth adapter')
         self.backend = Native() if native else BLED112(tty)
-        self.handlers = {data_category:[] for data_category in DataCategory}
+        self.cpool = ConsumerPool(DataCategory)
 
         # scan and connect to a Myo armband and extract the firmware version
         mac = self.backend.scan('4248124a7f2c4847b9de04a9010006d5', mac)
@@ -210,7 +211,7 @@ class MyoRaw():
                 # which sensors think they're being moved around or something
                 emg = struct.unpack('<8H', pay[:16])
                 moving = pay[16]
-                self._call_handlers(DataCategory.EMG, cur_time, emg, moving, None)
+                self.cpool.enqueue_data(DataCategory.EMG, cur_time, emg, moving, None)
             # Read notification handles corresponding to the for EMG characteristics
             elif attr in (0x2b, 0x2e, 0x31, 0x34):
                 # According to http://developerblog.myo.com/myocraft-emg-in-the-bluetooth-protocol/
@@ -220,28 +221,28 @@ class MyoRaw():
                 emg1 = struct.unpack('<8b', pay[:8])
                 emg2 = struct.unpack('<8b', pay[8:])
                 characteristic_num = int((attr - 1) / 3 - 14)
-                self._call_handlers(DataCategory.EMG, cur_time, emg1, None, characteristic_num)
-                self._call_handlers(DataCategory.EMG, cur_time, emg2, None, characteristic_num)
+                self.cpool.enqueue_data(DataCategory.EMG, cur_time, emg1, None, characteristic_num)
+                self.cpool.enqueue_data(DataCategory.EMG, cur_time, emg2, None, characteristic_num)
             # Read IMU characteristic handle
             elif attr == 0x1c:
                 quat = struct.unpack('<4h', pay[:8])
                 acc = struct.unpack('<3h', pay[8:14])
                 gyro = struct.unpack('<3h', pay[14:20])
-                self._call_handlers(DataCategory.IMU, cur_time, quat, acc, gyro)
+                self.cpool.enqueue_data(DataCategory.IMU, cur_time, quat, acc, gyro)
             # Read classifier characteristic handle
             elif attr == 0x23:
                 # note that older Myo versions send three bytes whereas newer ones send six bytes
                 typ, val, xdir = struct.unpack('<3B', pay[:3])
                 if typ == 1:  # on arm
-                    self._call_handlers(DataCategory.ARM, cur_time, Arm(val), XDirection(xdir))
+                    self.cpool.enqueue_data(DataCategory.ARM, cur_time, Arm(val), XDirection(xdir))
                 elif typ == 2:  # removed from arm
-                    self._call_handlers(DataCategory.ARM, cur_time, Arm.UNKNOWN, XDirection.UNKNOWN)
+                    self.cpool.enqueue_data(DataCategory.ARM, cur_time, Arm.UNKNOWN, XDirection.UNKNOWN)
                 elif typ == 3:  # pose
-                    self._call_handlers(DataCategory.POSE, cur_time, Pose(val))
+                    self.cpool.enqueue_data(DataCategory.POSE, cur_time, Pose(val))
             # Read battery characteristic handle
             elif attr == 0x11:
                 battery_level = ord(pay)
-                self._call_handlers(DataCategory.BATTERY, cur_time, battery_level)
+                self.cpool.enqueue_data(DataCategory.BATTERY, cur_time, battery_level)
             else:
                 LOG.warning('data with unknown attr: %02X %s', attr, pay)
 
@@ -253,6 +254,7 @@ class MyoRaw():
         Disconnect from the Myo armband
         '''
         self.backend.handler = None
+        self.cpool.shutdown()
         self.backend.disconnect()
 
     def set_sleep_mode(self, mode):
@@ -320,7 +322,7 @@ class MyoRaw():
         :param data_category: data category of the handler function
         :param handler: function to be called
         '''
-        self.handlers[data_category].append(handler)
+        self.cpool.add_callback(data_category, handler)
 
     def pop_handler(self, data_category, index=-1):
         '''
@@ -330,7 +332,7 @@ class MyoRaw():
         :param index: index of the handler to be removed and returned
         :returns: the removed handler
         '''
-        return self.handlers[data_category].pop(index)
+        return self.cpool.pop_callback(data_category, index)
 
     def clear_handler(self, data_category):
         '''
@@ -338,13 +340,4 @@ class MyoRaw():
 
         :param data_category: data category of the handler function
         '''
-        self.handlers[data_category].clear()
-
-    def _call_handlers(self, data_category, *args):
-        '''
-        Call all handlers of a given data category
-
-        :param data_category: data category of the handler function
-        '''
-        for handler in self.handlers[data_category]:
-            handler(*args)
+        self.cpool.clear_callbacks(data_category)
